@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>예배 순서지</title>
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --card: #FFFFFF;
+    --ink: #2B2A27;
+    --muted: #6B675F;
+    --accent: #4B5D63;
+    --accent-soft: #E4E9E9;
+    --line: #DAD5C8;
+    --serif: "Noto Serif KR", "Batang", "Nanum Myeongjo", serif;
+    --sans: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", -apple-system, sans-serif;
+    --scale: 1;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body { min-height: 100vh; min-height: 100dvh; }
+
+  /* ── 상단 헤더 / 목록 ──────────────────────── */
+
+  header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .eyebrow { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+
+  .subject { font-size: 16px; color: var(--muted); }
+
+  .text-size-control { display: flex; gap: 8px; margin-top: 16px; }
+
+  .text-size-control button {
+    flex: 1;
+    padding: 10px 0;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .text-size-control button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .order-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    text-align: left;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    cursor: pointer;
+    font-family: var(--sans);
+    color: var(--ink);
+  }
+
+  .order-item:active { background: var(--accent-soft); }
+  .order-item.sub { margin-left: 28px; border-style: dashed; }
+
+  .order-num {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .order-item.sub .order-num { background: transparent; color: var(--muted); font-size: 12px; }
+
+  .order-body { flex: 1; min-width: 0; }
+  .order-title { font-size: 17px; font-weight: 600; }
+  .order-desc { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .order-arrow { flex: none; color: var(--muted); font-size: 20px; }
+
+  /* ── 전체화면 상세(페이지 넘김) ───────────────── */
+
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--paper);
+    z-index: 20;
+    display: none;
+    flex-direction: column;
+  }
+
+  .detail-overlay.open { display: flex; }
+
+  .detail-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .detail-close {
+    background: var(--card);
+    border: 1px solid var(--line);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detail-header-title { font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--muted); }
+
+  /* 페이지 뷰포트 — 여기 안쪽만 매 페이지 내용으로 교체된다 */
+  .pager-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pager-viewport {
+    position: absolute;
+    inset: 0;
+    padding: 20px 26px;
+    overflow: hidden;
+  }
+
+  .pager-viewport-inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* 좌우 탭 영역(화면 절반씩 눌러도 넘어가게) */
+  .tap-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30%;
+    z-index: 2;
+  }
+  .tap-zone.left { left: 0; }
+  .tap-zone.right { right: 0; }
+
+  .detail-footer {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .page-nav-btn {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .page-nav-btn:disabled { visibility: hidden; }
+
+  .page-indicator {
+    flex: none;
+    min-width: 60px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 내용 블록 스타일 ─────────────────────── */
+
+  .para {
+    font-size: calc(19px * var(--scale));
+    line-height: 1.9;
+    margin: 0 0 20px;
+  }
+
+  .detail-title {
+    font-family: var(--serif);
+    font-size: calc(24px * var(--scale));
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 8px 0 6px;
+  }
+
+  .detail-meta { font-size: calc(14px * var(--scale)); color: var(--muted); margin: 0 0 20px; }
+
+  .scripture-block {
+    font-family: var(--serif);
+    font-size: calc(21px * var(--scale));
+    line-height: 2;
+    background: var(--card);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    border-radius: 4px;
+    margin: 0 0 20px;
+  }
+
+  .scripture-ref {
+    display: block;
+    margin-top: 14px;
+    font-family: var(--sans);
+    font-size: calc(14px * var(--scale));
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .section-label {
+    font-size: calc(14px * var(--scale));
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+
+  .section-divider { border: none; border-top: 1px solid var(--line); margin: 8px 0 24px; }
+
+  .hymn-number {
+    font-family: var(--serif);
+    font-size: calc(64px * var(--scale));
+    font-weight: 700;
+    text-align: center;
+    margin: 40px 0 4px;
+    color: var(--accent);
+  }
+
+  .hymn-caption { text-align: center; font-size: calc(18px * var(--scale)); color: var(--muted); margin: 0 0 24px; }
+
+  .hymn-sheet-placeholder {
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: calc(14px * var(--scale));
+    line-height: 1.7;
+  }
+
+  .hymn-sheet-image {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+    margin: 0 0 8px;
+  }
+
+  /* ── 헤더 상단(제목 + 설정 버튼) ─────────────── */
+
+  .header-top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-btn-group {
+    flex: none;
+    display: flex;
+    gap: 8px;
+  }
+
+  .settings-btn {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-size: 19px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .settings-btn:active { background: var(--accent-soft); }
+
+  /* 대문으로 돌아가는 홈 버튼 — 화면 오른쪽 아래에 떠 있는 동그란 버튼 */
+
+  .home-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+  }
+
+  .home-fab:active { background: var(--accent-soft); }
+
+  /* ── 설정 화면 ─────────────────────────────── */
+
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--paper);
+    z-index: 30;
+    display: none;
+    flex-direction: column;
+  }
+
+  .settings-overlay.open { display: flex; }
+
+  .settings-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px 60px;
+  }
+
+  .settings-body-inner { max-width: 640px; margin: 0 auto; }
+
+  .settings-section { margin: 0 0 32px; }
+
+  .settings-section h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+
+  .settings-hint { font-size: 13px; color: var(--muted); margin: -8px 0 16px; }
+
+  .settings-field { margin: 0 0 14px; }
+
+  .settings-field label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+
+  .settings-field input[type="text"],
+  .settings-field textarea,
+  .settings-field select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15px;
+    background: var(--card);
+    color: var(--ink);
+    resize: vertical;
+  }
+
+  .settings-field textarea { min-height: 90px; line-height: 1.6; }
+
+  /* 순서 목록 — 네이버 블로그 카테고리 관리처럼, 평소엔 한 줄로만 보이고
+     눌러야 그 항목의 편집 칸이 펼쳐진다(한 번에 하나씩 작업). */
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 0 0 8px;
+    background: var(--card);
+    cursor: pointer;
+  }
+
+  .item-row.expanded { border-radius: 10px 10px 0 0; border-color: var(--accent); border-bottom: none; margin-bottom: 0; }
+
+  .item-row-main { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+
+  .item-row-num {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-row-title {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-row-badge {
+    flex: none;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--accent-soft);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .item-row-actions { flex: none; display: flex; gap: 4px; }
+
+  .item-row-actions button {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .item-row-actions button.danger { color: #B24B4B; border-color: #E3B9B9; }
+
+  .item-row.hidden-row { opacity: 0.5; }
+
+  .item-row-hide-toggle {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    padding: 0 2px;
+  }
+
+  .preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+  }
+
+  .preset-btn {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .preset-btn:active { background: var(--accent-soft); }
+
+  .settings-field input[type="file"] {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .hymn-image-preview {
+    width: 100%;
+    max-width: 260px;
+    border-radius: 8px;
+    display: block;
+    margin: 8px 0 0;
+    border: 1px solid var(--line);
+  }
+
+  .item-detail {
+    border: 1px solid var(--accent);
+    border-top: 1px dashed var(--line);
+    border-radius: 0 0 10px 10px;
+    padding: 16px;
+    margin: 0 0 10px;
+    background: var(--card);
+  }
+
+  .item-detail-hint { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+
+  .field-group {
+    border-top: 1px dashed var(--line);
+    margin: 14px 0 0;
+    padding: 14px 0 0;
+  }
+
+  .field-group.hidden { display: none; }
+
+  .field-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 10px 0 0;
+  }
+
+  .add-item-btn, .settings-save-btn, .settings-reset-btn {
+    width: 100%;
+    padding: 14px 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .settings-save-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .settings-reset-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 13px;
+    text-decoration: underline;
+    padding: 10px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<a class="home-fab" href="대문.html" aria-label="대문으로">🏠</a>
+
+<header>
+  <div class="header-top-row">
+    <div>
+      <div class="eyebrow">예배 순서지</div>
+      <h1 id="serviceTitleDisplay">故 송철헌 집사님 추도예배</h1>
+    </div>
+    <div class="header-btn-group">
+      <button class="settings-btn" id="settingsOpenBtn" aria-label="설정">⚙</button>
+    </div>
+  </div>
+  <div class="subject">항목을 누르면 내용이 크게 표시됩니다</div>
+  <div class="text-size-control">
+    <button data-scale="0.85">글자 작게</button>
+    <button data-scale="1" class="active">보통</button>
+    <button data-scale="1.3">글자 크게</button>
+  </div>
+</header>
+
+<main>
+  <ul class="order-list" id="orderList"></ul>
+</main>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-header">
+    <div class="detail-header-title" id="detailHeaderTitle"></div>
+    <button class="detail-close" id="detailClose" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="pager-wrap">
+    <div class="pager-viewport" id="pagerViewport">
+      <div class="pager-viewport-inner" id="pagerInner"></div>
+    </div>
+    <div class="tap-zone left" id="tapLeft"></div>
+    <div class="tap-zone right" id="tapRight"></div>
+  </div>
+
+  <div class="detail-footer">
+    <button class="page-nav-btn" id="prevBtn">‹ 이전</button>
+    <div class="page-indicator" id="pageIndicator"></div>
+    <button class="page-nav-btn" id="nextBtn">다음 ›</button>
+  </div>
+</div>
+
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="detail-header">
+    <div class="detail-header-title">설정</div>
+    <button class="detail-close" id="settingsCloseBtn" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="settings-body">
+    <div class="settings-body-inner">
+
+      <div class="settings-section">
+        <h2>예배 정보</h2>
+        <div class="settings-field">
+          <label for="serviceTitleInput">예배 이름</label>
+          <input type="text" id="serviceTitleInput" placeholder="예: 주일오전예배, 청년예배, 故 OOO 집사님 추도예배 등">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>예배 순서 배정</h2>
+        <div class="settings-hint">항목을 누르면 그 항목의 편집 칸만 펼쳐집니다. 한 번에 하나씩 작업하세요.</div>
+        <div id="itemsEditor"></div>
+
+        <div class="settings-hint" style="margin-top:0;">자주 쓰는 순서를 눌러 바로 추가하세요.</div>
+        <div class="preset-buttons" id="presetButtons"></div>
+
+        <button class="add-item-btn" id="addItemBtn">+ 새 순서 추가</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="detail-footer" style="display:block;">
+    <button class="add-item-btn" id="settingsExportBtn">저장하기 (파일로 저장)</button>
+    <div class="settings-hint" style="margin:10px 0 0;">저장 위치를 물어보는 창이 뜨면, 이 파일이 있던 원래 폴더로 가서 같은 파일 이름으로 저장하면 바로 덮어쓰기 됩니다.</div>
+    <button class="settings-reset-btn" id="settingsResetBtn">기본 예배 순서로 되돌리기</button>
+  </div>
+</div>
+
+<script id="embeddedData" type="application/json">{}</script>
+
+<script>
+  // ══════════════════════════════════════════════
+  // 예배 데이터 모델
+  //
+  // 순서 항목(item)은 아래 필드를 가진다.
+  //   num, sub        : 목록 번호 / 하위 항목 여부
+  //   title, desc     : 목록에 표시되는 제목·설명
+  //   type            : "일반" | "성경말씀" | "성경본문" | "찬송" | "설교"
+  //   content         : 본문 내용(빈 줄로 문단 구분) — 일반/성경말씀/설교에서 사용
+  //   scriptureRef/Text/First : 성경 관련 데이터 — 성경말씀/성경본문/설교에서 사용
+  //     (scriptureFirst는 성경말씀에서만 의미가 있음: 성경본문은 항상 성경만,
+  //      설교는 항상 성경이 내용보다 앞에 고정)
+  //   hymnNum/hymnCaption/hymnImage : 찬송 관련 데이터
+  //
+  //   유형이 "설교"이거나 "성경본문"인 항목은 유형이 고정되어 있어 설정 화면에
+  //   "유형" 선택칸이 나타나지 않는다(자주 쓰는 순서 버튼으로만 만들어진다).
+  // ══════════════════════════════════════════════
+
+  // 로컬 저장 키에 이 파일의 경로(location.pathname)를 포함시킨다.
+  // (예전에는 모든 예배순서지 파일이 이 값을 똑같이 썼는데, 같은 도메인
+  // 에서 열면 localStorage가 도메인 단위로 공유되기 때문에 한 파일에서
+  // "저장하기"를 누르면 다른 예배순서지까지 그 내용으로 덮어
+  // 써지는 문제가 있었다. 파일마다 다른 키를 쓰도록 고쳐서 서로 완전히
+  // 분리되게 했다.)
+  const STORAGE_KEY = "cdyb_order_service_data_v1:" + (location.pathname || "unknown");
+
+  const defaultServiceTitle = "청년예배";
+
+  // 문단마다 별도 블록으로 나눠야 페이지 계산이 정확해진다 — 빈 줄 기준으로 분리.
+  function paragraphs(text) {
+    return (text || "")
+      .split(/\n\s*\n/)
+      .map(t => t.trim())
+      .filter(Boolean)
+      .map(t => `<p class="para">${t.replace(/\n/g, '<br>')}</p>`);
+  }
+
+  function textToBr(text) {
+    return (text || "").trim().replace(/\n/g, "<br>\n");
+  }
+
+  const sermonBodyRaw = `오늘 우리는 하나님께서 사랑하시는 故 송철헌 집사님을 기억하며, 가족이 함께 모여 하나님께 예배를 드리고 있습니다.
+
+사실 아버님은 우리가 어린 시절에 돌아가셔서 많은 기억이 남아 있지 않습니다. 그럼에도 그때 그 시절 아버지와 함께했던 일들은 여전히 추억으로 남아 있고, 그 시절이 가끔은 그립기도 합니다.
+
+그리고 자라면서는 아버지의 빈자리로 인해서 겪어야 했던 많은 일들로 인해서, 어떨 때는 아버지에 대한 아쉬움, 또는 약간의 원망, 사실 이런 것이 있었던 것도 사실입니다.
+
+그런데 결혼을 해서 내가 아빠가 되어보니, 또 아버지가 돌아가셨던 그 나이를 지나다 보니, 다는 모르지만 그때의 아버지의 마음을 조금은 이해할 수 있겠다는 생각도 듭니다.
+
+아무튼 오늘 돌아가신 아버지를 생각하면, 많은 감정이 교차하면서, 여전히 아쉽고 그리움으로 남아있지만, 오늘 주신 말씀은 그와 같은 우리에게 큰 위로와 소망이 될 줄 믿습니다.
+
+오늘 본문말씀은 사도 바울이 자신의 인생의 마지막 순간에 고백한 말이지요. 그가 지나온 순간들을 돌아보면서, 그는 세 가지로 정리해서 이야기를 합니다.
+
+첫째는 그가 "선한 싸움을 싸웠다"는 것입니다.
+둘째는 그가 "달려갈 길을 다 마쳤다"는 것입니다.
+셋째는 그가 "믿음을 끝까지 지켰다"는 것입니다.
+
+그렇습니다. 우리는 이미 바울이 어떠한 삶을 살았는지 잘 알고 있습니다. 주님의 부르심을 입고, 6절에서 말하듯이 주님이 하라고 하신 이방인을 위한 사도로서의 사명을 위해서 완전히 전제로 부음바 될 정도로 자신을 온전히 드렸습니다.
+
+그 일을 위해서 바울은 치열하게 선한 싸움을 싸웠고, 달려갈 길을 달려갔고, 끝까지 믿음을 지켰습니다.
+
+저는 우리 아버님의 삶 또한 바울 사도와는 약간 결이 다를 수 있겠지만, 그와 같았다고 생각합니다. 한 평생 가장으로서 가정을 지키고, 자녀들을 양육하기 위해 수많은 땀방울을 흘리셨습니다. 때로는 세상의 고단함과 어려움 속에서도 묵묵히 자신의 자리를 지키며 선한 싸움을 다 싸웠다고 생각합니다.
+
+비록 육신의 질고로 인해서 암투병을 하다 부르심을 받았지만, 감사하게도 투병 중에 예수님을 믿고 천국을 바라보면서, 마지막 하나님이 아버지에게 부여한 이 땅에서의 맡겨진 사명을 다하고, 인생의 달려갈 길을 성실하게 완주하셨다고 믿습니다.
+
+그리고 사도 바울은 이렇게 달려갈 길을 마친 후, 자신을 위해 "의의 면류관이 예비되어 있다"고 고백합니다. 아버님도 이 세상에서의 모든 고단함을 내려놓고, 주님의 따뜻한 품에서 지금 그 영광스러운 면류관을 쓰고 계시다고 믿습니다.
+
+사랑하는 우리 누님, 형님, 형수님, 우리 여보, 찬영이...
+
+여러분, 한 번 죽는 것은 사람에게 정해진 것이기 때문에, 누구나 때가 되면 죽게 되는 것은 당연한 이치입니다. 누구도 이것을 피해갈 수도 없고, 이것을 거스를 사람은 아무도 없습니다.
+
+그런데 중요한 것은 그 뒤의 말씀 아니겠습니까? 죽음 이후에 심판이 있겠다는 것입니다.
+
+그러므로 이제 남겨진 우리들의 과제는, 아버님이 그러하셨듯, 우리 각자에게 주어진 삶의 자리에서 선한 싸움을 싸워가는 것입니다. 그리고 우리의 신앙을 끝까지 지켜가는 것입니다.
+
+— 믿음이 없는 자는 다시 예수님을 믿는 믿음을 가져야 할 것이요.
+— 믿음이 흔들리는 자는 흔들리지 않는 믿음을 다시 가져야 할 것이요.
+— 믿음이 있는 자는 더욱 담대하고 더욱 강한 믿음을 가지기 위해서 신앙의 싸움을 싸워가야 할 것입니다.
+
+뿐만 아니라 우리 자녀들의 신앙을 복되게 세워가게 하기 위해서, 끊임없이 말씀으로 양육하고 기도로 세워가야 할 줄 믿습니다.
+
+그리고 중요한 것은 하나님께서 우리에게 주어진 사명을 다하는 것입니다. 하나님이 각자에게 주신 달란트가 있습니다. 다섯 개냐, 두 개냐, 한 개냐가 중요하지 않습니다. 끝까지 성실한 종 되어서 주님 앞에 설 때 남길 열매가 있어야 한다는 것입니다. 한 달란트 받은 자처럼 땅에 묻어두는 일은 없어야 하고, 하나님이 주신 사명을 위해서 끝까지 달려가야 할 줄 믿습니다.
+
+그리고 우리 서로 더 사랑하고 화목하게 살아가는 우리 가족이 되어야 할 줄 믿습니다.
+
+이렇게 될 때, 우리는 훗날 천국에서 아버님과 어머님을 다시 만나게 될 것입니다. 우리가 서로 다시 만날 때는 어떤 모습으로 만나게 될지는 아무도 모르지요. 그러나 다는 몰라도, 아마 영광스러운 모습일 것입니다.
+
+그 날을 기대하며, 이 땅 가운데서 우리는 성실하게 살아가고, 그리고 믿음의 길을 이어가는 우리 복된 가정이 되기를 주님의 이름으로 축원합니다.
+
+옆 사람과 인사합시다.
+"선한 싸움을 싸웁시다."
+"달려갈 길을 달려갑시다."
+"믿음을 끝까지 지킵시다."`;
+
+  const sermonPrayerRaw = `함께 기도합시다.
+
+— 우리가 하는 사역을 위해서: 찬양선교 디딤을 위해서, 은혜가풍성한교회를 위해서
+
+— 우리의 자녀들을 위해서: 신앙과 미래의 꿈, 배우자 — 송찬희(대학원), 송예희(복학), 송찬영(대학생활과 내년의 군입대), 송찬민(고3), 송예인(꿈)을 위해서
+
+— 우리가 하는 기업을 위해서: 디딤카페, 어린이집, 누님의 미래의 삶을 하나님이 지켜달라고 기도합시다.
+
+하나님 아버지, 오늘 아버님을 추모하며 드리는 예배를 통해 우리 마음에 천국 소망과 위로를 주시니 감사합니다. 아버님이 남겨주신 아름다운 유산을 기억하며, 남겨진 가족들이 서로 우애하고 하나님을 기쁘시게 하는 삶을 살게 하여 주옵소서. 예수님의 이름으로 기도드립니다. 아멘.`;
+
+  const mukdoPrayerRaw = `하나님 아버지, 이 시간 故 송철헌 집사님의 추도예배로 가족들이 함께 모였습니다.
+
+원하옵기는 우리가 하나님을 믿는 자들로서, 죽음으로 인한 슬픔이나 죽음에 대한 어떤 두려움을 가지고 예배하는 것이 아니고, 오직 죽음을 이기신 부활하신 예수님을 바라보고, 죽음 이후에 있을 영광스러움을 바라보면서 감사함으로, 예배하는 귀하고 복된 시간 되도록 인도하여 주시옵소서.
+
+이 시간 성령님 함께 해 주시고, 악한 마귀 틈 못 타게 하시고, 오직 주님만 바라보는 은혜로운 시간 되게 하여주시옵소서.
+
+예수님의 귀하신 이름으로 기도합니다. 아멘.`;
+
+  const lordsPrayerRaw = `하늘에 계신 우리 아버지여, 이름이 거룩히 여김을 받으시오며,
+나라이 임하옵시며, 뜻이 하늘에서 이룬 것같이 땅에서도 이루어지이다.
+오늘날 우리에게 일용할 양식을 주옵시고,
+우리가 우리에게 죄 지은 자를 사하여 준 것같이 우리 죄를 사하여 주옵시고,
+우리를 시험에 들게 하지 마옵시고, 다만 악에서 구하옵소서.
+대개 나라와 권세와 영광이 아버지께 영원히 있사옵나이다. 아멘.`;
+
+  // 찬송 악보 이미지 — 이제는 설정 화면에서 항목마다 직접 사진을 올릴 수 있다
+  // (item.hymnImage에 data URL로 저장됨). 사진이 없으면 안내 문구만 보여준다.
+  function hymnSheetBlock(item) {
+    if (item.hymnImage) {
+      return `<img class="hymn-sheet-image" src="${item.hymnImage}" alt="찬송가 ${item.hymnNum || ""}장 악보">`;
+    }
+    return `<div class="hymn-sheet-placeholder">악보 사진이 아직 없습니다.<br>설정에서 이 찬송 항목에 악보 사진을 올려주세요.</div>`;
+  }
+
+  let idCounter = 0;
+  function newId() { idCounter += 1; return "item-" + Date.now() + "-" + idCounter; }
+
+
+  function defaultItems() {
+    return [
+      {"id": "item-1788394409221-48", "num": "1", "sub": false, "title": "경배와찬양", "desc": "다같이", "type": "일반", "content": ""},
+      {"id": "item-1788394409221-49", "num": "2", "sub": false, "title": "통성기도", "desc": "다같이", "type": "일반", "content": ""},
+      {"id": "item-1788394409221-50", "num": "3", "sub": false, "title": "성경봉독", "desc": "", "type": "성경본문", "scriptureRef": "", "scriptureText": ""},
+      {"id": "item-1788394409221-51", "sub": true, "title": "설교", "desc": "", "type": "설교", "scriptureRef": "", "scriptureText": "", "content": ""},
+      {"id": "item-1788394409221-52", "num": "4", "sub": false, "title": "통성기도", "desc": "다같이", "type": "일반", "content": ""},
+      {"id": "item-1788394409221-53", "num": "5", "sub": false, "title": "찬송", "desc": "", "type": "찬송", "hymnNum": "", "hymnCaption": ""},
+      {"id": "item-1788394409221-54", "num": "6", "sub": false, "title": "주기도문", "desc": "예배를 마치며", "type": "성경말씀", "scriptureRef": "", "scriptureText": "하늘에 계신 우리 아버지여, 이름이 거룩히 여김을 받으시오며,\n나라이 임하옵시며, 뜻이 하늘에서 이룬 것같이 땅에서도 이루어지이다.\n오늘날 우리에게 일용할 양식을 주옵시고,\n우리가 우리에게 죄 지은 자를 사하여 준 것같이 우리 죄를 사하여 주옵시고,\n우리를 시험에 들게 하지 마옵시고, 다만 악에서 구하옵소서.\n대개 나라와 권세와 영광이 아버지께 영원히 있사옵나이다. 아멘.", "scriptureFirst": false, "content": "주기도문으로 예배를 마치겠습니다."}
+    ];
+  }
+
+  // ── 상태 불러오기 ─────────────────────────────
+  //
+  // 우선순위: ① 이 파일 안에 담겨 있는 데이터(embeddedData, "저장하기"로
+  // 만든 파일에는 내용이 들어 있다 — 컴퓨터를 옮겨도 파일만 있으면 그대로 보인다)
+  // → ② 이 브라우저의 로컬 저장(localStorage, "저장하기"를 누를 때 함께
+  // 저장된다) → ③ 기본 예배 순서
+
+  let serviceTitle = defaultServiceTitle;
+  let items = defaultItems();
+
+  // 예전 설정 화면에서 저장된 데이터(구조가 지금과 다름)를 지금 구조로
+  // 자동으로 맞춰준다 — localStorage나 파일에 이미 저장해 둔 내용이 있어도
+  // 코드가 업데이트되면 그 자리에서 새 구조로 바뀐다.
+  function migrateItem(item) {
+    const it = Object.assign({}, item);
+
+    // 예전 "성경봉독"(성경말씀 유형)을 지금의 "성경본문" 유형으로.
+    if (it.type === "성경말씀" && it.title === "성경봉독") {
+      it.type = "성경본문";
+      delete it.content;
+      delete it.scriptureFirst;
+    }
+
+    // 예전 설교 항목의 설교 제목 / 마무리 기도문을 본문 내용 하나로 합친다.
+    if (it.type === "설교" && (it.sermonTitle || it.prayerContent)) {
+      const parts = [];
+      if (it.sermonTitle && it.sermonTitle.trim()) parts.push(it.sermonTitle.trim());
+      if (it.content && it.content.trim()) parts.push(it.content.trim());
+      if (it.prayerContent && it.prayerContent.trim()) parts.push(it.prayerContent.trim());
+      it.content = parts.join("\n\n");
+      delete it.sermonTitle;
+      delete it.prayerContent;
+    }
+
+    return it;
+  }
+
+  function loadEmbeddedData() {
+    try {
+      const el = document.getElementById("embeddedData");
+      if (!el) return null;
+      const text = (el.textContent || "").trim();
+      if (!text || text === "{}") return null;
+      const parsed = JSON.parse(text);
+      if (parsed && Array.isArray(parsed.items) && parsed.items.length) return parsed;
+    } catch (e) {
+      // 파일 안의 데이터가 손상되었으면 무시하고 다음 단계로 넘어간다.
+    }
+    return null;
+  }
+
+  function loadState() {
+    const embedded = loadEmbeddedData();
+    if (embedded) {
+      serviceTitle = embedded.serviceTitle || defaultServiceTitle;
+      items = embedded.items.map(migrateItem);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved && Array.isArray(saved.items) && saved.items.length) {
+        serviceTitle = saved.serviceTitle || defaultServiceTitle;
+        items = saved.items.map(migrateItem);
+      }
+    } catch (e) {
+      // 저장된 값을 읽지 못하면 기본값을 그대로 사용한다.
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ serviceTitle, items }));
+    } catch (e) {
+      // 저장이 불가능한 환경(예: 일부 브라우저의 file:// 제한)이면 조용히 건너뛴다.
+    }
+  }
+
+  loadState();
+
+  // ── 항목 → 상세 화면 블록 변환 ─────────────────
+
+  function buildBlocks(item) {
+    const label = item.title || "";
+    const scriptureBlock = item.scriptureText
+      ? `<div class="scripture-block">${textToBr(item.scriptureText)}${item.scriptureRef ? `<span class="scripture-ref">${item.scriptureRef}</span>` : ""}</div>`
+      : "";
+    const contentBlocks = paragraphs(item.content);
+
+    if (item.type === "찬송") {
+      return [
+        `<div class="section-label">${label}</div>`,
+        `<div class="hymn-number">${item.hymnNum || ""}장</div>`,
+        `<div class="hymn-caption">${item.hymnCaption || ""}</div>`,
+        hymnSheetBlock(item)
+      ].filter(Boolean);
+    }
+
+    if (item.type === "설교") {
+      return [
+        `<div class="section-label">${label}</div>`,
+        scriptureBlock,
+        ...contentBlocks
+      ].filter(Boolean);
+    }
+
+    if (item.type === "성경본문") {
+      // 멘트(제목) 없이 성경 본문만 바로 보여준다.
+      return [scriptureBlock].filter(Boolean);
+    }
+
+    if (item.type === "성경말씀") {
+      const ordered = item.scriptureFirst
+        ? [scriptureBlock, ...contentBlocks]
+        : [...contentBlocks, scriptureBlock];
+      return [`<div class="section-label">${label}</div>`, ...ordered].filter(Boolean);
+    }
+
+    // 일반
+    return [`<div class="section-label">${label}</div>`, ...contentBlocks].filter(Boolean);
+  }
+
+  // ── 목록 렌더링 ─────────────────────────────
+
+  const serviceTitleDisplay = document.getElementById("serviceTitleDisplay");
+  const listEl = document.getElementById("orderList");
+
+  function renderList() {
+    serviceTitleDisplay.textContent = serviceTitle;
+    document.title = serviceTitle + " — 예배 순서지";
+
+    listEl.innerHTML = "";
+    items.filter(item => !item.hidden).forEach(item => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.className = "order-item" + (item.sub ? " sub" : "");
+      btn.innerHTML = `
+        <div class="order-num">${item.sub ? "•" : (item.num || "")}</div>
+        <div class="order-body">
+          <div class="order-title">${item.title || ""}</div>
+          <div class="order-desc">${item.desc || ""}</div>
+        </div>
+        <div class="order-arrow">›</div>
+      `;
+      btn.addEventListener("click", () => openDetail(item));
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    });
+  }
+
+  renderList();
+
+  // ── 페이지 넘김 엔진 ─────────────────────────
+  //
+  // 각 항목의 블록(문단/성경구절 등 HTML 조각)을, 실제 화면 높이에 맞춰
+  // "한 화면에 들어가는 만큼씩" 그리디하게 묶어 페이지로 나눈다.
+  // 글자 크기를 바꾸거나 화면 방향이 바뀌면 다시 계산한다.
+
+  const overlay = document.getElementById("detailOverlay");
+  const detailHeaderTitle = document.getElementById("detailHeaderTitle");
+  const pagerViewport = document.getElementById("pagerViewport");
+  const pagerInner = document.getElementById("pagerInner");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const pageIndicator = document.getElementById("pageIndicator");
+  const tapLeft = document.getElementById("tapLeft");
+  const tapRight = document.getElementById("tapRight");
+
+  let currentItem = null;
+  let currentPages = [[]];
+  let currentPageIndex = 0;
+
+  function paginateBlocks(blockHtmls) {
+    const measurer = document.createElement("div");
+    measurer.className = "pager-viewport-inner";
+    measurer.style.position = "absolute";
+    measurer.style.visibility = "hidden";
+    measurer.style.pointerEvents = "none";
+    measurer.style.width = pagerInner.clientWidth + "px";
+    document.body.appendChild(measurer);
+
+    const maxHeight = pagerViewport.clientHeight - 40; // 상하 padding 20px씩
+    const pages = [];
+    let current = [];
+
+    for (const html of blockHtmls) {
+      const test = current.concat([html]);
+      measurer.innerHTML = test.join("");
+      if (measurer.scrollHeight > maxHeight && current.length > 0) {
+        pages.push(current);
+        current = [html];
+      } else {
+        current = test;
+      }
+    }
+    if (current.length) pages.push(current);
+    if (pages.length === 0) pages.push([]);
+
+    document.body.removeChild(measurer);
+    return pages;
+  }
+
+  function openDetail(item) {
+    currentItem = item;
+    detailHeaderTitle.textContent = item.title;
+    overlay.classList.add("open");
+    // overlay가 display:flex로 바뀐 다음 프레임에 실제 크기를 재야 정확하다.
+    requestAnimationFrame(recomputePages);
+  }
+
+  function recomputePages() {
+    if (!currentItem) return;
+    currentPages = paginateBlocks(buildBlocks(currentItem));
+    currentPageIndex = 0;
+    renderPage();
+  }
+
+  function renderPage() {
+    pagerInner.innerHTML = currentPages[currentPageIndex]?.join("") ?? "";
+    const total = currentPages.length;
+    pageIndicator.textContent = total > 1 ? `${currentPageIndex + 1} / ${total}` : "";
+    prevBtn.disabled = currentPageIndex === 0;
+    nextBtn.disabled = currentPageIndex === total - 1;
+  }
+
+  function goNext() {
+    if (currentPageIndex < currentPages.length - 1) {
+      currentPageIndex++;
+      renderPage();
+    }
+  }
+
+  function goPrev() {
+    if (currentPageIndex > 0) {
+      currentPageIndex--;
+      renderPage();
+    }
+  }
+
+  prevBtn.addEventListener("click", goPrev);
+  nextBtn.addEventListener("click", goNext);
+  tapLeft.addEventListener("click", goPrev);
+  tapRight.addEventListener("click", goNext);
+
+  document.getElementById("detailClose").addEventListener("click", () => {
+    overlay.classList.remove("open");
+    currentItem = null;
+  });
+
+  // 스와이프(좌우로 손가락 밀기)
+  let touchStartX = null, touchStartY = null;
+  pagerViewport.addEventListener("touchstart", e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  pagerViewport.addEventListener("touchend", e => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goNext(); else goPrev();
+    }
+    touchStartX = null; touchStartY = null;
+  }, { passive: true });
+
+  // 키보드(화살표)도 지원 — 데스크탑에서 미리보기/연습할 때 편하게
+  document.addEventListener("keydown", e => {
+    if (!overlay.classList.contains("open")) return;
+    if (e.key === "ArrowRight") goNext();
+    if (e.key === "ArrowLeft") goPrev();
+    if (e.key === "Escape") { overlay.classList.remove("open"); currentItem = null; }
+  });
+
+  // 글자 크기 변경 — 열려 있는 항목이 있으면 페이지를 다시 계산한다
+  // (페이지당 들어가는 분량이 바뀌므로 1페이지로 리셋).
+  document.querySelectorAll(".text-size-control button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".text-size-control button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.documentElement.style.setProperty("--scale", btn.dataset.scale);
+      if (overlay.classList.contains("open")) requestAnimationFrame(recomputePages);
+    });
+  });
+
+  // 화면 방향 전환 등 — 열려 있을 때만, 살짝 지연 후 재계산
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (!overlay.classList.contains("open")) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(recomputePages, 200);
+  });
+
+  // ══════════════════════════════════════════════
+  // 설정 화면 — 예배 이름 · 순서 배정 · 내용/데이터 입력
+  // ══════════════════════════════════════════════
+
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const settingsOpenBtn = document.getElementById("settingsOpenBtn");
+  const settingsCloseBtn = document.getElementById("settingsCloseBtn");
+  const serviceTitleInput = document.getElementById("serviceTitleInput");
+  const itemsEditor = document.getElementById("itemsEditor");
+  const addItemBtn = document.getElementById("addItemBtn");
+  const presetButtons = document.getElementById("presetButtons");
+  const settingsResetBtn = document.getElementById("settingsResetBtn");
+  const settingsExportBtn = document.getElementById("settingsExportBtn");
+
+  // 자주 쓰는 순서 — 눌러서 예배순서 배정에 바로 추가한다.
+  // 더 필요한 순서는 "+ 새 순서 추가"로 직접 만들면 된다.
+  const PRESET_ITEMS = [
+    { label: "경배와찬양", type: "일반", desc: "다같이" },
+    { label: "묵도", type: "성경말씀", desc: "다 함께", scriptureFirst: true },
+    { label: "찬송", type: "찬송", desc: "다같이" },
+    { label: "대표기도", type: "일반", desc: "" },
+    { label: "통성기도", type: "일반", desc: "다같이" },
+    { label: "성경봉독", type: "성경본문", desc: "" },
+    { label: "설교", type: "설교", desc: "" },
+    { label: "특송", type: "일반", desc: "" },
+    { label: "헌금", type: "일반", desc: "" },
+    { label: "헌금송", type: "찬송", desc: "" },
+    { label: "광고", type: "일반", desc: "" },
+    { label: "주기도문", type: "성경말씀", desc: "예배를 마치며", scriptureText: lordsPrayerRaw, scriptureFirst: false },
+    { label: "폐회송", type: "찬송", desc: "" },
+    { label: "축도", type: "일반", desc: "" },
+  ];
+
+  // 편집 중에는 items를 직접 건드리지 않고 별도의 작업본(draft)에서 수정한 뒤
+  // "저장" 버튼을 눌러야만 실제 목록에 반영한다.
+  let draftItems = [];
+
+  // 지금 펼쳐져 있는 항목의 id — 한 번에 하나만 펼쳐진다(네이버 블로그
+  // 카테고리 관리처럼, 목록은 항상 한 줄씩만 보이고 누른 것만 펼쳐서 작업).
+  let expandedItemId = null;
+
+  function cloneItems(src) { return src.map(it => Object.assign({}, it)); }
+
+  function openSettings() {
+    draftItems = cloneItems(items);
+    expandedItemId = null;
+    serviceTitleInput.value = serviceTitle;
+    renderItemsEditor();
+    settingsOverlay.classList.add("open");
+  }
+
+  function closeSettings() {
+    settingsOverlay.classList.remove("open");
+  }
+
+  settingsOpenBtn.addEventListener("click", openSettings);
+  settingsCloseBtn.addEventListener("click", closeSettings);
+
+  function addPresetItem(preset) {
+    const item = {
+      id: newId(),
+      num: String(draftItems.filter(it => !it.sub).length + 1),
+      sub: false,
+      hidden: false,
+      title: preset.label,
+      desc: preset.desc || "",
+      type: preset.type,
+      content: preset.content || "",
+    };
+    if (preset.type === "성경말씀" || preset.type === "설교" || preset.type === "성경본문") {
+      item.scriptureRef = preset.scriptureRef || "";
+      item.scriptureText = preset.scriptureText || "";
+    }
+    if (preset.type === "성경말씀") {
+      item.scriptureFirst = preset.scriptureFirst !== undefined ? preset.scriptureFirst : true;
+    }
+    if (preset.type === "찬송") {
+      item.hymnNum = preset.hymnNum || "";
+      item.hymnCaption = preset.hymnCaption || "";
+    }
+    draftItems.push(item);
+    expandedItemId = item.id;
+    renderItemsEditor();
+    itemsEditor.querySelector(".item-row.expanded")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderPresetButtons() {
+    presetButtons.innerHTML = "";
+    PRESET_ITEMS.forEach(preset => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preset-btn";
+      btn.textContent = preset.label;
+      btn.addEventListener("click", () => addPresetItem(preset));
+      presetButtons.appendChild(btn);
+    });
+  }
+
+  renderPresetButtons();
+
+  function fieldGroupsForType(type) {
+    // 각 유형에서 어떤 field-group을 보여줄지
+    return {
+      content: type === "일반" || type === "성경말씀" || type === "설교",
+      scripture: type === "성경말씀" || type === "설교" || type === "성경본문",
+      hymn: type === "찬송",
+      showTypeSelect: type !== "설교" && type !== "성경본문",
+      showScriptureFirstToggle: type === "성경말씀",
+    };
+  }
+
+  function renderItemsEditor() {
+    itemsEditor.innerHTML = "";
+    draftItems.forEach((item, idx) => {
+      itemsEditor.appendChild(buildItemRowGroup(item, idx));
+    });
+  }
+
+  // 한 항목 = [한 줄 요약 행] + (펼쳐진 경우에만) [편집 칸]
+  function buildItemRowGroup(item, idx) {
+    const wrap = document.createElement("div");
+    const isExpanded = expandedItemId === item.id;
+
+    const row = document.createElement("div");
+    row.className = "item-row" + (isExpanded ? " expanded" : "") + (item.hidden ? " hidden-row" : "");
+    row.innerHTML = `
+      <div class="item-row-main">
+        <span class="item-row-num">${item.sub ? "•" : (item.num || "-")}</span>
+        <span class="item-row-title">${escapeText(item.title) || "(제목 없음)"}</span>
+        <span class="item-row-badge">${item.type}</span>
+      </div>
+      <div class="item-row-actions">
+        <label class="item-row-hide-toggle" title="체크하면 예배 순서 목록에서 숨겨집니다">
+          <input type="checkbox" class="hide-checkbox" ${item.hidden ? "checked" : ""}>
+          숨김
+        </label>
+        <button type="button" class="item-row-up" title="위로">▲</button>
+        <button type="button" class="item-row-down" title="아래로">▼</button>
+        <button type="button" class="item-row-delete danger" title="삭제">삭제</button>
+      </div>
+    `;
+
+    row.querySelector(".item-row-main").addEventListener("click", () => {
+      expandedItemId = isExpanded ? null : item.id;
+      renderItemsEditor();
+    });
+
+    row.querySelector(".hide-checkbox").addEventListener("click", e => e.stopPropagation());
+    row.querySelector(".hide-checkbox").addEventListener("change", e => {
+      draftItems[idx].hidden = e.target.checked;
+      row.classList.toggle("hidden-row", e.target.checked);
+    });
+
+    row.querySelector(".item-row-up").addEventListener("click", e => {
+      e.stopPropagation();
+      if (idx === 0) return;
+      [draftItems[idx - 1], draftItems[idx]] = [draftItems[idx], draftItems[idx - 1]];
+      renderItemsEditor();
+    });
+
+    row.querySelector(".item-row-down").addEventListener("click", e => {
+      e.stopPropagation();
+      if (idx === draftItems.length - 1) return;
+      [draftItems[idx + 1], draftItems[idx]] = [draftItems[idx], draftItems[idx + 1]];
+      renderItemsEditor();
+    });
+
+    row.querySelector(".item-row-delete").addEventListener("click", e => {
+      e.stopPropagation();
+      if (!confirm(`"${draftItems[idx].title || "이 순서"}" 항목을 삭제할까요?`)) return;
+      if (expandedItemId === draftItems[idx].id) expandedItemId = null;
+      draftItems.splice(idx, 1);
+      renderItemsEditor();
+    });
+
+    wrap.appendChild(row);
+    if (isExpanded) {
+      wrap.appendChild(buildItemDetailPanel(item, idx, row));
+    }
+    return wrap;
+  }
+
+  // 펼쳐진 항목의 실제 편집 칸 — 번호/제목/설명/유형 + 내용/데이터 입력
+  function buildItemDetailPanel(item, idx, rowEl) {
+    const panel = document.createElement("div");
+    panel.className = "item-detail";
+
+    const groups = fieldGroupsForType(item.type);
+
+    panel.innerHTML = `
+      <div class="item-detail-hint">이 항목만 수정합니다. 다 끝나면 목록으로 접어두고 다음 항목을 눌러 이어서 편집하세요.</div>
+
+      <div class="settings-field">
+        <label>번호</label>
+        <input type="text" class="num-input" value="${escapeAttr(item.num)}" placeholder="번호" ${item.sub ? "disabled" : ""}>
+      </div>
+      <label class="checkbox-field" style="margin:0 0 14px;">
+        <input type="checkbox" class="sub-checkbox" ${item.sub ? "checked" : ""}>
+        하위 항목(번호 없이 · 표시)
+      </label>
+
+      <div class="settings-field">
+        <label>제목 (목록에 표시)</label>
+        <input type="text" class="title-input" value="${escapeAttr(item.title)}">
+      </div>
+
+      <div class="settings-field">
+        <label>설명 (목록에 표시되는 한 줄 요약)</label>
+        <input type="text" class="desc-input" value="${escapeAttr(item.desc)}">
+      </div>
+
+      ${groups.showTypeSelect ? `
+      <div class="settings-field">
+        <label>유형</label>
+        <select class="type-select">
+          <option value="일반">일반 (본문 텍스트만)</option>
+          <option value="성경말씀">성경말씀 (성경구절 포함)</option>
+          <option value="찬송">찬송 (찬송가 장 번호)</option>
+        </select>
+      </div>
+      ` : ""}
+
+      <div class="field-group content-field ${groups.content ? "" : "hidden"}">
+        <div class="field-group-title">${item.type === "설교" ? "설교 내용" : "내용 입력"}</div>
+        <div class="settings-field">
+          <label>${item.type === "설교" ? "설교 내용 (빈 줄로 문단 구분)" : "본문 내용 (빈 줄로 문단 구분)"}</label>
+          <textarea class="content-input">${escapeText(item.content)}</textarea>
+        </div>
+      </div>
+
+      <div class="field-group scripture-field ${groups.scripture ? "" : "hidden"}">
+        <div class="field-group-title">${item.type === "성경본문" ? "성경본문" : "성경 관련 데이터"}</div>
+        <div class="settings-field">
+          <label>성경 출처</label>
+          <input type="text" class="scripture-ref-input" value="${escapeAttr(item.scriptureRef)}" placeholder="예: 디모데후서 4:7~8">
+        </div>
+        <div class="settings-field">
+          <label>성경 본문</label>
+          <textarea class="scripture-text-input">${escapeText(item.scriptureText)}</textarea>
+        </div>
+        ${groups.showScriptureFirstToggle ? `
+        <label class="checkbox-field">
+          <input type="checkbox" class="scripture-first-checkbox" ${item.scriptureFirst ? "checked" : ""}>
+          성경구절을 본문 내용보다 앞에 표시
+        </label>
+        ` : ""}
+      </div>
+
+      <div class="field-group hymn-field ${groups.hymn ? "" : "hidden"}">
+        <div class="field-group-title">찬송 관련 데이터</div>
+        <div class="settings-field">
+          <label>찬송가 장 번호</label>
+          <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="예: 488">
+        </div>
+        <div class="settings-field">
+          <label>안내 문구</label>
+          <input type="text" class="hymn-caption-input" value="${escapeAttr(item.hymnCaption)}" placeholder="예: 다 함께 찬송가 488장을 부르겠습니다">
+        </div>
+        <div class="settings-field">
+          <label>찬송가 악보 사진</label>
+          <input type="file" accept="image/*" class="hymn-image-input">
+          ${item.hymnImage ? `<img class="hymn-image-preview" src="${item.hymnImage}" alt="악보 미리보기">` : ""}
+          ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
+        </div>
+      </div>
+    `;
+
+    const typeSelect = panel.querySelector(".type-select"); // 설교·성경본문 유형에는 없음(null일 수 있음)
+    if (typeSelect) typeSelect.value = item.type;
+
+    const rowTitleEl = rowEl.querySelector(".item-row-title");
+    const rowNumEl = rowEl.querySelector(".item-row-num");
+    const rowBadgeEl = rowEl.querySelector(".item-row-badge");
+
+    // ── 이벤트 바인딩 (draftItems를 직접 갱신, 목록 전체를 다시 그리지
+    //    않아 입력 중 포커스가 끊기지 않는다) ──
+
+    panel.querySelector(".num-input").addEventListener("input", e => {
+      draftItems[idx].num = e.target.value;
+      rowNumEl.textContent = draftItems[idx].sub ? "•" : (e.target.value || "-");
+    });
+
+    panel.querySelector(".sub-checkbox").addEventListener("change", e => {
+      draftItems[idx].sub = e.target.checked;
+      panel.querySelector(".num-input").disabled = e.target.checked;
+      rowNumEl.textContent = e.target.checked ? "•" : (draftItems[idx].num || "-");
+    });
+
+    panel.querySelector(".title-input").addEventListener("input", e => {
+      draftItems[idx].title = e.target.value;
+      rowTitleEl.textContent = e.target.value || "(제목 없음)";
+    });
+
+    panel.querySelector(".desc-input").addEventListener("input", e => {
+      draftItems[idx].desc = e.target.value;
+    });
+
+    if (typeSelect) {
+      typeSelect.addEventListener("change", e => {
+        draftItems[idx].type = e.target.value;
+        rowBadgeEl.textContent = e.target.value;
+        const g = fieldGroupsForType(e.target.value);
+        panel.querySelector(".content-field").classList.toggle("hidden", !g.content);
+        panel.querySelector(".scripture-field").classList.toggle("hidden", !g.scripture);
+        panel.querySelector(".hymn-field").classList.toggle("hidden", !g.hymn);
+        panel.querySelector(".content-field label").textContent = "본문 내용 (빈 줄로 문단 구분)";
+      });
+    }
+
+    panel.querySelector(".content-input").addEventListener("input", e => {
+      draftItems[idx].content = e.target.value;
+    });
+
+    panel.querySelector(".scripture-ref-input").addEventListener("input", e => {
+      draftItems[idx].scriptureRef = e.target.value;
+    });
+
+    panel.querySelector(".scripture-text-input").addEventListener("input", e => {
+      draftItems[idx].scriptureText = e.target.value;
+    });
+
+    panel.querySelector(".scripture-first-checkbox")?.addEventListener("change", e => {
+      draftItems[idx].scriptureFirst = e.target.checked;
+    });
+
+    panel.querySelector(".hymn-num-input").addEventListener("input", e => {
+      draftItems[idx].hymnNum = e.target.value;
+    });
+
+    panel.querySelector(".hymn-caption-input").addEventListener("input", e => {
+      draftItems[idx].hymnCaption = e.target.value;
+    });
+
+    panel.querySelector(".hymn-image-input").addEventListener("change", e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        draftItems[idx].hymnImage = reader.result;
+        renderItemsEditor(); // 미리보기를 보여주기 위해 다시 그린다
+      };
+      reader.readAsDataURL(file);
+    });
+
+    const hymnImageRemoveBtn = panel.querySelector(".hymn-image-remove-btn");
+    if (hymnImageRemoveBtn) {
+      hymnImageRemoveBtn.addEventListener("click", () => {
+        draftItems[idx].hymnImage = null;
+        renderItemsEditor();
+      });
+    }
+
+    return panel;
+  }
+
+  function escapeAttr(v) {
+    return (v || "").toString().replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+
+  function escapeText(v) {
+    return (v || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  addItemBtn.addEventListener("click", () => {
+    const item = {
+      id: newId(),
+      num: String(draftItems.filter(it => !it.sub).length + 1),
+      sub: false,
+      title: "새 순서",
+      desc: "",
+      type: "일반",
+      content: ""
+    };
+    draftItems.push(item);
+    expandedItemId = item.id; // 새로 추가한 항목을 바로 펼쳐서 이어서 입력하게 한다
+    renderItemsEditor();
+    itemsEditor.querySelector(".item-row.expanded")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  function sanitizeFilename(name) {
+    return (name || "예배순서지").replace(/[\\/:*?"<>|]/g, "").trim() || "예배순서지";
+  }
+
+  // 지금 화면에 있는 데이터를 새 HTML 파일 하나로 그대로 담아 다운로드한다.
+  // 이 파일은 로컬 저장(localStorage)과 무관하게 그 안에 데이터를 가지고
+  // 있으므로, 다른 컴퓨터로 옮겨서 열어도 내용이 그대로 보인다.
+  function downloadExportedHtml() {
+    const docClone = document.documentElement.cloneNode(true);
+    docClone.querySelectorAll(".detail-overlay, .settings-overlay").forEach(el => el.classList.remove("open"));
+    const dataScript = docClone.querySelector("#embeddedData");
+    if (dataScript) dataScript.textContent = JSON.stringify({ serviceTitle, items });
+
+    const html = "<!DOCTYPE html>\n" + docClone.outerHTML;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = sanitizeFilename(serviceTitle) + "_순서지.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  settingsExportBtn.addEventListener("click", () => {
+    serviceTitle = serviceTitleInput.value.trim() || defaultServiceTitle;
+    items = cloneItems(draftItems);
+    saveState();
+    renderList();
+    downloadExportedHtml();
+    closeSettings();
+  });
+
+  settingsResetBtn.addEventListener("click", () => {
+    if (!confirm("모든 항목을 기본 예배 순서로 되돌릴까요? 지금까지 편집한 내용은 사라집니다.")) return;
+    draftItems = defaultItems();
+    expandedItemId = null;
+    serviceTitleInput.value = defaultServiceTitle;
+    renderItemsEditor();
+  });
+</script>
+
+</body>
+</html>
