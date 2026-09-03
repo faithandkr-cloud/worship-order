@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>예배순서지</title>
+
+<!-- 패드 홈 화면에 아이콘으로 추가할 때 쓰이는 태그들 -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="예배순서지">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4B5D63">
+
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --card: #FFFFFF;
+    --ink: #2B2A27;
+    --muted: #6B675F;
+    --accent: #4B5D63;
+    --accent-soft: #E4E9E9;
+    --line: #DAD5C8;
+    --serif: "Noto Serif KR", "Batang", "Nanum Myeongjo", serif;
+    --sans: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .eyebrow { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    line-height: 1.35;
+  }
+
+  .subject { font-size: 15px; color: var(--muted); }
+
+  main { padding: 20px; max-width: 640px; margin: 0 auto; }
+
+  .group-title {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 28px 0 10px;
+  }
+
+  .group-title:first-child { margin-top: 0; }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  li { margin: 0 0 10px; }
+
+  a.order-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  a.order-item:active { background: var(--accent-soft); }
+
+  .order-title {
+    flex: 1;
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .order-arrow { color: var(--muted); font-size: 18px; flex: none; }
+
+  footer { padding: 24px 20px 40px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">예배순서지</div>
+  <h1>예배를 선택해 주세요</h1>
+  <div class="subject">아래에서 오늘 드릴 예배를 눌러 들어가세요</div>
+</header>
+
+<main>
+  <div class="group-title">정기 예배</div>
+  <ul>
+    <li><a class="order-item" href="주일오전예배_순서지.html"><span class="order-title">주일오전예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="주일오후예배_순서지.html"><span class="order-title">주일오후예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="수요예배_순서지.html"><span class="order-title">수요예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="새벽예배_순서지.html"><span class="order-title">새벽예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="청년예배_순서지.html"><span class="order-title">청년예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="학생예배_순서지.html"><span class="order-title">학생예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="금요철야예배_순서지.html"><span class="order-title">금요철야예배</span><span class="order-arrow">›</span></a></li>
+  </ul>
+
+  <div class="group-title">그 외 예배</div>
+  <ul>
+    <li><a class="order-item" href="구역예배_순서지.html"><span class="order-title">구역예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="심방예배_순서지.html"><span class="order-title">심방예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="추도예배_순서지.html"><span class="order-title">추도예배</span><span class="order-arrow">›</span></a></li>
+  </ul>
+</main>
+
+<footer>은혜가풍성한교회</footer>
+
+</body>
+</html>
