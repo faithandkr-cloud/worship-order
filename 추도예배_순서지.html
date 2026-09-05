@@ -252,11 +252,11 @@
 
   .scripture-ref {
     display: block;
-    margin-top: 14px;
+    margin-bottom: 14px;
     font-family: var(--sans);
     font-size: calc(14px * var(--scale));
     color: var(--muted);
-    text-align: right;
+    font-weight: 600;
   }
 
   .section-label {
@@ -575,6 +575,10 @@
     cursor: pointer;
   }
 
+  .settings-save-row { display: flex; gap: 10px; }
+  .settings-save-row .add-item-btn,
+  .settings-save-row .settings-save-btn { width: auto; flex: 1; }
+
   .settings-save-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   .settings-reset-btn {
@@ -667,8 +671,11 @@
   </div>
 
   <div class="detail-footer" style="display:block;">
-    <button class="add-item-btn" id="settingsExportBtn">저장하기 (파일로 저장)</button>
-    <div class="settings-hint" style="margin:10px 0 0;">저장 위치를 물어보는 창이 뜨면, 이 파일이 있던 원래 폴더로 가서 같은 파일 이름으로 저장하면 바로 덮어쓰기 됩니다.</div>
+    <div class="settings-save-row">
+      <button class="settings-save-btn" id="settingsSaveBtn">브라우저 저장</button>
+      <button class="add-item-btn" id="settingsExportBtn">로컬 저장 (파일로)</button>
+    </div>
+    <div class="settings-hint" style="margin:10px 0 0;">작업 중에는 "브라우저 저장"으로 틈틈이 남겨두세요(이 컴퓨터·이 브라우저에만 보관됩니다). 다 마쳤으면 "로컬 저장"으로 파일을 받아, 저장 창에서 원래 폴더로 가서 같은 파일 이름으로 저장(덮어쓰기)한 뒤 깃허브에 올리세요.</div>
     <button class="settings-reset-btn" id="settingsResetBtn">기본 예배 순서로 되돌리기</button>
   </div>
 </div>
@@ -930,7 +937,7 @@
   function buildBlocks(item) {
     const label = item.title || "";
     const scriptureBlock = item.scriptureText
-      ? `<div class="scripture-block">${textToBr(item.scriptureText)}${item.scriptureRef ? `<span class="scripture-ref">${item.scriptureRef}</span>` : ""}</div>`
+      ? `<div class="scripture-block">${item.scriptureRef ? `<span class="scripture-ref">${item.scriptureRef}</span>` : ""}${textToBr(item.scriptureText)}</div>`
       : "";
     const contentBlocks = paragraphs(item.content);
 
@@ -938,7 +945,7 @@
       return [
         `<div class="section-label">${label}</div>`,
         `<div class="hymn-number">${item.hymnNum || ""}장</div>`,
-        `<div class="hymn-caption">${item.hymnCaption || ""}</div>`,
+        `<div class="hymn-caption">${item.hymnNum ? "다 함께 찬송가 " + item.hymnNum + "장을 부르겠습니다" : ""}</div>`,
         hymnSheetBlock(item)
       ].filter(Boolean);
     }
@@ -1089,10 +1096,19 @@
   tapLeft.addEventListener("click", goPrev);
   tapRight.addEventListener("click", goNext);
 
-  document.getElementById("detailClose").addEventListener("click", () => {
+  function closeDetail() {
     overlay.classList.remove("open");
     currentItem = null;
-  });
+  }
+
+  document.getElementById("detailClose").addEventListener("click", closeDetail);
+
+  // 상단 제목 표시줄(닫기 X 말고 아무 데나)을 눌러도 닫히게.
+  document.getElementById("detailHeaderTitle").addEventListener("click", closeDetail);
+
+  // 내용 화면 한가운데(좌우 30%씩은 페이지 넘기기 영역이라 제외)를
+  // 눌러도 목록으로 바로 돌아가게 한다. 페이지 넘기기와 겹치지 않는다.
+  pagerViewport.addEventListener("click", closeDetail);
 
   // 스와이프(좌우로 손가락 밀기)
   let touchStartX = null, touchStartY = null;
@@ -1150,6 +1166,7 @@
   const addItemBtn = document.getElementById("addItemBtn");
   const presetButtons = document.getElementById("presetButtons");
   const settingsResetBtn = document.getElementById("settingsResetBtn");
+  const settingsSaveBtn = document.getElementById("settingsSaveBtn");
   const settingsExportBtn = document.getElementById("settingsExportBtn");
 
   // 자주 쓰는 순서 — 눌러서 예배순서 배정에 바로 추가한다.
@@ -1320,7 +1337,7 @@
     return wrap;
   }
 
-  // 펼쳐진 항목의 실제 편집 칸 — 번호/제목/설명/유형 + 내용/데이터 입력
+  // 펼쳐진 항목의 실제 편집 칸 — 번호 + 내용/데이터 입력 (제목·설명·유형은 순서 버튼이 이미 정해준다)
   function buildItemDetailPanel(item, idx, rowEl) {
     const panel = document.createElement("div");
     panel.className = "item-detail";
@@ -1340,32 +1357,8 @@
       </label>
 
       <div class="settings-field">
-        <label>제목 (목록에 표시)</label>
-        <input type="text" class="title-input" value="${escapeAttr(item.title)}">
-      </div>
-
-      <div class="settings-field">
-        <label>설명 (목록에 표시되는 한 줄 요약)</label>
-        <input type="text" class="desc-input" value="${escapeAttr(item.desc)}">
-      </div>
-
-      ${groups.showTypeSelect ? `
-      <div class="settings-field">
-        <label>유형</label>
-        <select class="type-select">
-          <option value="일반">일반 (본문 텍스트만)</option>
-          <option value="성경말씀">성경말씀 (성경구절 포함)</option>
-          <option value="찬송">찬송 (찬송가 장 번호)</option>
-        </select>
-      </div>
-      ` : ""}
-
-      <div class="field-group content-field ${groups.content ? "" : "hidden"}">
-        <div class="field-group-title">${item.type === "설교" ? "설교 내용" : "내용 입력"}</div>
-        <div class="settings-field">
-          <label>${item.type === "설교" ? "설교 내용 (빈 줄로 문단 구분)" : "본문 내용 (빈 줄로 문단 구분)"}</label>
-          <textarea class="content-input">${escapeText(item.content)}</textarea>
-        </div>
+        <label>메모 (목록에 작게 표시 — 기도자·설교 제목·담당자 등)</label>
+        <input type="text" class="desc-input" value="${escapeAttr(item.desc)}" placeholder="예: 김OO 집사님 / 다같이 / 새찬송가 620장">
       </div>
 
       <div class="field-group scripture-field ${groups.scripture ? "" : "hidden"}">
@@ -1386,15 +1379,19 @@
         ` : ""}
       </div>
 
+      <div class="field-group content-field ${groups.content ? "" : "hidden"}">
+        <div class="field-group-title">${item.type === "설교" ? "설교 내용" : "내용 입력"}</div>
+        <div class="settings-field">
+          <label>${item.type === "설교" ? "설교 내용 (빈 줄로 문단 구분)" : "본문 내용 (빈 줄로 문단 구분)"}</label>
+          <textarea class="content-input">${escapeText(item.content)}</textarea>
+        </div>
+      </div>
+
       <div class="field-group hymn-field ${groups.hymn ? "" : "hidden"}">
         <div class="field-group-title">찬송 관련 데이터</div>
         <div class="settings-field">
           <label>찬송가 장 번호</label>
           <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="예: 488">
-        </div>
-        <div class="settings-field">
-          <label>안내 문구</label>
-          <input type="text" class="hymn-caption-input" value="${escapeAttr(item.hymnCaption)}" placeholder="예: 다 함께 찬송가 488장을 부르겠습니다">
         </div>
         <div class="settings-field">
           <label>찬송가 악보 사진</label>
@@ -1405,15 +1402,12 @@
       </div>
     `;
 
-    const typeSelect = panel.querySelector(".type-select"); // 설교·성경본문 유형에는 없음(null일 수 있음)
-    if (typeSelect) typeSelect.value = item.type;
-
-    const rowTitleEl = rowEl.querySelector(".item-row-title");
     const rowNumEl = rowEl.querySelector(".item-row-num");
-    const rowBadgeEl = rowEl.querySelector(".item-row-badge");
 
     // ── 이벤트 바인딩 (draftItems를 직접 갱신, 목록 전체를 다시 그리지
     //    않아 입력 중 포커스가 끊기지 않는다) ──
+    // 제목·설명·유형은 순서 버튼을 누를 때 이미 알맞게 정해지므로
+    // 여기서 따로 바꾸는 칸을 두지 않는다.
 
     panel.querySelector(".num-input").addEventListener("input", e => {
       draftItems[idx].num = e.target.value;
@@ -1426,26 +1420,9 @@
       rowNumEl.textContent = e.target.checked ? "•" : (draftItems[idx].num || "-");
     });
 
-    panel.querySelector(".title-input").addEventListener("input", e => {
-      draftItems[idx].title = e.target.value;
-      rowTitleEl.textContent = e.target.value || "(제목 없음)";
-    });
-
     panel.querySelector(".desc-input").addEventListener("input", e => {
       draftItems[idx].desc = e.target.value;
     });
-
-    if (typeSelect) {
-      typeSelect.addEventListener("change", e => {
-        draftItems[idx].type = e.target.value;
-        rowBadgeEl.textContent = e.target.value;
-        const g = fieldGroupsForType(e.target.value);
-        panel.querySelector(".content-field").classList.toggle("hidden", !g.content);
-        panel.querySelector(".scripture-field").classList.toggle("hidden", !g.scripture);
-        panel.querySelector(".hymn-field").classList.toggle("hidden", !g.hymn);
-        panel.querySelector(".content-field label").textContent = "본문 내용 (빈 줄로 문단 구분)";
-      });
-    }
 
     panel.querySelector(".content-input").addEventListener("input", e => {
       draftItems[idx].content = e.target.value;
@@ -1465,10 +1442,6 @@
 
     panel.querySelector(".hymn-num-input").addEventListener("input", e => {
       draftItems[idx].hymnNum = e.target.value;
-    });
-
-    panel.querySelector(".hymn-caption-input").addEventListener("input", e => {
-      draftItems[idx].hymnCaption = e.target.value;
     });
 
     panel.querySelector(".hymn-image-input").addEventListener("change", e => {
@@ -1521,6 +1494,19 @@
     return (name || "예배순서지").replace(/[\\/:*?"<>|]/g, "").trim() || "예배순서지";
   }
 
+  // 지금 열려 있는 파일 이름을 그대로 돌려준다(예: "구역예배_순서지.html").
+  // 저장 시 이 이름을 그대로 써야, 원래 폴더에서 저장할 때 이름이 자동으로
+  // 일치해서 덮어쓰기가 바로 된다. 예배 이름을 다른 걸로 바꿔 입력해도
+  // 파일 이름 자체는 안 바뀐다.
+  function currentFileName() {
+    try {
+      const parts = decodeURIComponent(location.pathname).split("/");
+      const last = parts[parts.length - 1];
+      if (last && last.toLowerCase().endsWith(".html")) return last;
+    } catch (e) {}
+    return sanitizeFilename(serviceTitle) + "_순서지.html";
+  }
+
   // 지금 화면에 있는 데이터를 새 HTML 파일 하나로 그대로 담아 다운로드한다.
   // 이 파일은 로컬 저장(localStorage)과 무관하게 그 안에 데이터를 가지고
   // 있으므로, 다른 컴퓨터로 옮겨서 열어도 내용이 그대로 보인다.
@@ -1535,12 +1521,20 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = sanitizeFilename(serviceTitle) + "_순서지.html";
+    a.download = currentFileName();
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
+
+  settingsSaveBtn.addEventListener("click", () => {
+    serviceTitle = serviceTitleInput.value.trim() || defaultServiceTitle;
+    items = cloneItems(draftItems);
+    saveState();
+    renderList();
+    closeSettings();
+  });
 
   settingsExportBtn.addEventListener("click", () => {
     serviceTitle = serviceTitleInput.value.trim() || defaultServiceTitle;
