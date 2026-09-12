@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>예배순서지</title>
+<script src="./sql-wasm.js"></script>
+
+<!-- 패드 홈 화면에 아이콘으로 추가할 때 쓰이는 태그들 -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="예배순서지">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4B5D63">
+
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --card: #FFFFFF;
+    --ink: #2B2A27;
+    --muted: #6B675F;
+    --accent: #4B5D63;
+    --accent-soft: #E4E9E9;
+    --line: #DAD5C8;
+    --serif: "Noto Serif KR", "Batang", "Nanum Myeongjo", serif;
+    --sans: "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .eyebrow { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    line-height: 1.35;
+  }
+
+  .subject { font-size: 15px; color: var(--muted); }
+
+  main { padding: 20px; max-width: 640px; margin: 0 auto; }
+
+  .group-title {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 28px 0 10px;
+  }
+
+  .group-title:first-child { margin-top: 0; }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  li { margin: 0 0 10px; }
+
+  a.order-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  a.order-item:active { background: var(--accent-soft); }
+
+  .order-title {
+    flex: 1;
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .order-arrow { color: var(--muted); font-size: 18px; flex: none; }
+
+  footer { padding: 24px 20px 40px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* ── 헤더 상단 자료연결 버튼 ───────────────── */
+
+  .header-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+  .data-link-btn {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .data-link-btn:active { background: var(--accent-soft); }
+
+  /* ── 자료 연결 오버레이 ───────────────────── */
+
+  .data-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--paper);
+    z-index: 30;
+    display: none;
+    flex-direction: column;
+  }
+
+  .data-overlay.open { display: flex; }
+
+  .data-overlay-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .data-overlay-title { font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--muted); }
+
+  .data-overlay-close {
+    background: var(--card);
+    border: 1px solid var(--line);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .data-overlay-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .data-overlay-inner { max-width: 640px; margin: 0 auto; }
+
+  .data-section { margin: 0 0 28px; }
+  .data-section h2 { font-family: var(--serif); font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+  .data-hint { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 12px; }
+
+  .data-field { margin: 0 0 12px; }
+  .data-field label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+  .data-field input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .data-primary-btn, .data-secondary-btn {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--accent);
+  }
+
+  .data-primary-btn { background: var(--accent); color: #fff; }
+  .data-secondary-btn { background: var(--card); color: var(--accent); }
+
+  .data-status { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top-row">
+    <div>
+      <div class="eyebrow">예배순서지</div>
+      <h1>예배를 선택해 주세요</h1>
+      <div class="subject">아래에서 오늘 드릴 예배를 눌러 들어가세요</div>
+    </div>
+    <button type="button" class="data-link-btn" id="dataLinkOpenBtn">⚙ 성경·찬송 연결</button>
+  </div>
+</header>
+
+<main>
+  <div class="group-title">정기 예배</div>
+  <ul>
+    <li><a class="order-item" href="1. 주일오전예배.html"><span class="order-title">주일오전예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="2. 주일오후예배.html"><span class="order-title">주일오후예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="3. 수요기도회.html"><span class="order-title">수요기도회</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="4. 새벽예배.html"><span class="order-title">새벽예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="8. 청년예배.html"><span class="order-title">청년예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="9. 학생예배.html"><span class="order-title">학생예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="5. 금요기도회.html"><span class="order-title">금요기도회</span><span class="order-arrow">›</span></a></li>
+  </ul>
+
+  <div class="group-title">그 외 예배</div>
+  <ul>
+    <li><a class="order-item" href="6. 구역예배.html"><span class="order-title">구역예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="10. 심방예배.html"><span class="order-title">심방예배</span><span class="order-arrow">›</span></a></li>
+    <li><a class="order-item" href="7. 추도예배.html"><span class="order-title">추도예배</span><span class="order-arrow">›</span></a></li>
+  </ul>
+</main>
+
+<footer>은혜가풍성한교회</footer>
+
+<div class="data-overlay" id="dataOverlay">
+  <div class="data-overlay-header">
+    <div class="data-overlay-title">성경·찬송 자료 연결</div>
+    <button type="button" class="data-overlay-close" id="dataOverlayCloseBtn" aria-label="닫기">✕</button>
+  </div>
+  <div class="data-overlay-body">
+    <div class="data-overlay-inner">
+
+      <div class="data-section">
+        <p class="data-hint">여기서 한 번만 연결해두면, 9개 예배순서지 파일 전부(주일오전/오후, 수요, 새벽, 청년, 학생, 구역, 심방, 추도예배)가 이 성경·찬송 자료를 자동으로 함께 씁니다. 같은 주소(도메인)로 열 때만 공유되며, 이 브라우저(기기)에만 저장되므로 다른 기기에서는 그 기기에서 한 번 더 연결해주세요.</p>
+      </div>
+
+      <div class="data-section">
+        <h2>자료 폴더 한 번에 연결하기</h2>
+        <p class="data-hint">성경 파일(.mybible)과 찬송가 악보 사진이 함께 들어있는 폴더를 통째로 선택하면 성경 연결과 찬송 악보 매칭이 한 번에 됩니다.</p>
+        <button type="button" class="data-primary-btn" id="dataFolderPickBtn">자료 폴더 선택해서 연결하기</button>
+        <input type="file" id="dataFolderInput" webkitdirectory directory multiple style="display:none;">
+        <p class="data-hint" style="margin:12px 0 6px;">폴더 전체 선택이 안 되는 기기라면 아래로 파일들을 직접 여러 개 선택해주세요.</p>
+        <button type="button" class="data-secondary-btn" id="dataFilesPickBtn">여러 파일 직접 선택</button>
+        <input type="file" id="dataFilesInput" multiple accept=".mybible,image/*" style="display:none;">
+        <div class="data-status" id="dataFolderStatusText">아직 연결하지 않았습니다.</div>
+      </div>
+
+      <div class="data-section">
+        <h2>성경 데이터 연결 (수동)</h2>
+        <p class="data-hint">위에서 자료 폴더를 연결했다면 아래는 그대로 두어도 됩니다. 성경읽기 등 다른 앱에서 이미 저장해 둔 번역본이 있으면 그 이름(ID)만 입력하고 "연결 확인"을 누르세요.</p>
+        <div class="data-field">
+          <label for="bibleVerIdInput">번역본 이름(ID)</label>
+          <input type="text" id="bibleVerIdInput" placeholder="예: 개역개정">
+        </div>
+        <button type="button" class="data-secondary-btn" id="bibleCheckBtn">연결 확인</button>
+        <div class="data-status" id="bibleStatusText">아직 확인하지 않았습니다.</div>
+        <div class="data-field" style="margin-top:16px;">
+          <label>새 성경 데이터 올리기 (.mybible 파일 — 파일명이 그대로 번역본 이름이 됩니다)</label>
+          <input type="file" accept=".mybible" id="bibleImportFile">
+        </div>
+        <button type="button" class="data-primary-btn" id="bibleImportBtn">이 파일로 저장하고 연결</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════
+  // 아래는 각 예배순서지 파일(주일오전예배 등)의 "성경 + 찬송가 자료 연결"과
+  // 완전히 같은 저장 방식이다. 같은 이름(BibleAppStore/hymnDB)의 IndexedDB와
+  // 같은 localStorage 키를 쓰기 때문에, 여기서 한 번 연결해두면 같은 주소로
+  // 열리는 9개 예배순서지 파일이 모두 이 자료를 그대로 찾아 쓴다.
+
+  const AppDB = (() => {
+    const DB_NAME = 'BibleAppStore';
+    const DB_VER = 1;
+    let _db = null;
+    function open() {
+      if (_db) return Promise.resolve(_db);
+      return new Promise((res, rej) => {
+        const req = indexedDB.open(DB_NAME, DB_VER);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('files')) db.createObjectStore('files', { keyPath: 'key' });
+        };
+        req.onsuccess = e => { _db = e.target.result; res(_db); };
+        req.onerror = e => rej(e);
+      });
+    }
+    async function save(key, data, meta) {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const tx = db.transaction('files', 'readwrite');
+        tx.objectStore('files').put({ key, data, meta: meta || {}, savedAt: Date.now() });
+        tx.oncomplete = () => res(true);
+        tx.onerror = e => rej(e);
+      });
+    }
+    async function load(key) {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const tx = db.transaction('files', 'readonly');
+        const req = tx.objectStore('files').get(key);
+        req.onsuccess = () => res(req.result || null);
+        req.onerror = e => rej(e);
+      });
+    }
+    return { save, load };
+  })();
+
+  function stripMyswordExt(filename) {
+    const i = (filename || "").indexOf('.');
+    return i === -1 ? filename : filename.slice(0, i);
+  }
+
+  let SQLJS = null, SQLJS_PROMISE = null;
+  async function ensureSqlJs() {
+    if (SQLJS) return SQLJS;
+    if (!SQLJS_PROMISE) SQLJS_PROMISE = initSqlJs({ locateFile: f => './' + f });
+    SQLJS = await SQLJS_PROMISE;
+    return SQLJS;
+  }
+
+  const BIBLE_DBS = {};
+  async function loadBibleDB(key) {
+    if (BIBLE_DBS[key]) return BIBLE_DBS[key];
+    try {
+      const rec = await AppDB.load('bible:' + key);
+      if (!rec || !rec.data) return null;
+      const SQL = await ensureSqlJs();
+      const db = new SQL.Database(new Uint8Array(rec.data));
+      BIBLE_DBS[key] = db;
+      return db;
+    } catch (e) { console.error('성경 DB 열기 실패:', key, e); return null; }
+  }
+
+  let activeBibleVerId = "";
+  try { activeBibleVerId = localStorage.getItem("cdyb_bible_verid") || ""; } catch (e) {}
+
+  function setActiveBibleVerId(verId) {
+    activeBibleVerId = verId;
+    try { localStorage.setItem("cdyb_bible_verid", verId); } catch (e) {}
+  }
+
+  const HymnImageDB = (() => {
+    const DB_NAME = 'hymnDB';
+    const STORE   = 'images';
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error);
+      });
+    }
+    async function save(key, blob) {
+      const db = await openDB();
+      await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(blob, key);
+        tx.oncomplete = res;
+        tx.onerror    = e => rej(e.target.error);
+      });
+      db.close();
+    }
+    async function count() {
+      const db = await openDB();
+      return new Promise((resolve) => {
+        const tx  = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).count();
+        req.onsuccess = () => { db.close(); resolve(req.result); };
+        req.onerror   = () => { db.close(); resolve(0); };
+      });
+    }
+    return { save, load: null, count };
+  })();
+
+  function parseHymnNumber(filename) {
+    let m = filename.match(/(\d+)\s*장/);
+    if (m) return parseInt(m[1], 10);
+    m = filename.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  function fileBaseName(name) {
+    return (name || "").replace(/\.[^.\/]+$/, "");
+  }
+
+  const HYMN_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
+
+  // ── DOM ──
+  const dataLinkOpenBtn = document.getElementById("dataLinkOpenBtn");
+  const dataOverlay = document.getElementById("dataOverlay");
+  const dataOverlayCloseBtn = document.getElementById("dataOverlayCloseBtn");
+  const bibleVerIdInput = document.getElementById("bibleVerIdInput");
+  const bibleStatusText = document.getElementById("bibleStatusText");
+  const bibleImportFile = document.getElementById("bibleImportFile");
+  const bibleImportBtn = document.getElementById("bibleImportBtn");
+  const bibleCheckBtn = document.getElementById("bibleCheckBtn");
+  const dataFolderPickBtn = document.getElementById("dataFolderPickBtn");
+  const dataFolderInput = document.getElementById("dataFolderInput");
+  const dataFilesPickBtn = document.getElementById("dataFilesPickBtn");
+  const dataFilesInput = document.getElementById("dataFilesInput");
+  const dataFolderStatusText = document.getElementById("dataFolderStatusText");
+
+  async function refreshBibleStatus() {
+    const verId = bibleVerIdInput.value.trim();
+    if (!verId) { bibleStatusText.textContent = "번역본 이름(ID)을 입력해주세요."; return; }
+    try {
+      const db = await loadBibleDB(verId);
+      if (db) {
+        let count = 0;
+        try {
+          const res = db.exec('SELECT COUNT(*) FROM Bible');
+          count = (res[0] && res[0].values && res[0].values[0] && res[0].values[0][0]) || 0;
+        } catch (e) {}
+        bibleStatusText.textContent = `연결됨: "${verId}"` + (count ? ` (${count}구절)` : "");
+        setActiveBibleVerId(verId);
+      } else {
+        bibleStatusText.textContent = "이 이름으로 저장된 성경 데이터가 없습니다. 정확한 이름인지 확인하시거나, 아래에서 .mybible 파일을 올려 새로 저장해주세요.";
+      }
+    } catch (e) {
+      bibleStatusText.textContent = "확인 중 오류가 발생했습니다: " + e.message;
+    }
+  }
+
+  bibleCheckBtn.addEventListener("click", refreshBibleStatus);
+
+  bibleImportBtn.addEventListener("click", async () => {
+    const file = bibleImportFile.files && bibleImportFile.files[0];
+    if (!file) { alert(".mybible 파일을 선택해주세요."); return; }
+    try {
+      const buf = await file.arrayBuffer();
+      const name = stripMyswordExt(file.name);
+      await AppDB.save('bible:' + name, buf, { fileName: file.name });
+      delete BIBLE_DBS[name];
+      setActiveBibleVerId(name);
+      bibleVerIdInput.value = name;
+      bibleStatusText.textContent = `저장 완료: "${name}"`;
+    } catch (e) {
+      alert("가져오기에 실패했습니다: " + e.message);
+    }
+  });
+
+  async function refreshDataFolderStatus() {
+    try {
+      const n = await HymnImageDB.count();
+      dataFolderStatusText.textContent =
+        (n > 0 || activeBibleVerId)
+          ? `연결됨 — 악보 이미지 ${n}개 저장됨` + (activeBibleVerId ? `, 성경 "${activeBibleVerId}" 연결됨.` : ".")
+          : "아직 연결하지 않았습니다.";
+    } catch (e) {}
+  }
+
+  dataFolderPickBtn.addEventListener("click", () => dataFolderInput.click());
+  dataFilesPickBtn.addEventListener("click", () => dataFilesInput.click());
+
+  async function importDataFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    dataFolderStatusText.textContent = "가져오는 중… (사진이 많으면 시간이 걸릴 수 있습니다)";
+    dataFolderPickBtn.disabled = true;
+    dataFilesPickBtn.disabled = true;
+
+    let bibleName = "";
+    let imageCount = 0, imageFail = 0;
+
+    for (const file of files) {
+      const lower = file.name.toLowerCase();
+      if (lower.endsWith(".mybible")) {
+        try {
+          const buf = await file.arrayBuffer();
+          const name = stripMyswordExt(file.name);
+          await AppDB.save('bible:' + name, buf, { fileName: file.name });
+          delete BIBLE_DBS[name];
+          setActiveBibleVerId(name);
+          bibleName = name;
+        } catch (e) { /* 성경 파일이 아니면 조용히 건너뛴다 */ }
+        continue;
+      }
+      const ext = lower.split(".").pop();
+      if (HYMN_IMAGE_EXTS.includes(ext)) {
+        try {
+          const num = parseHymnNumber(file.name);
+          const key = num !== null ? num : fileBaseName(file.name);
+          if (key === "" || key === null) continue;
+          await HymnImageDB.save(key, file);
+          imageCount++;
+        } catch (e) { imageFail++; }
+      }
+    }
+
+    const parts = [];
+    parts.push(bibleName ? `성경 "${bibleName}" 연결됨` : "성경 데이터(.mybible)를 찾지 못했습니다");
+    parts.push(`악보 이미지 ${imageCount}개 저장됨` + (imageFail ? ` (${imageFail}개 실패)` : ""));
+    dataFolderStatusText.textContent = parts.join(" · ");
+
+    if (bibleName) {
+      bibleVerIdInput.value = bibleName;
+      refreshBibleStatus();
+    }
+
+    dataFolderPickBtn.disabled = false;
+    dataFilesPickBtn.disabled = false;
+  }
+
+  dataFolderInput.addEventListener("change", async () => {
+    await importDataFiles(dataFolderInput.files);
+    dataFolderInput.value = "";
+  });
+
+  dataFilesInput.addEventListener("change", async () => {
+    await importDataFiles(dataFilesInput.files);
+    dataFilesInput.value = "";
+  });
+
+  function openDataOverlay() {
+    bibleVerIdInput.value = activeBibleVerId;
+    if (activeBibleVerId) refreshBibleStatus();
+    refreshDataFolderStatus();
+    dataOverlay.classList.add("open");
+  }
+  function closeDataOverlay() { dataOverlay.classList.remove("open"); }
+
+  dataLinkOpenBtn.addEventListener("click", openDataOverlay);
+  dataOverlayCloseBtn.addEventListener("click", closeDataOverlay);
+</script>
+
+</body>
+</html>
