@@ -1002,6 +1002,9 @@
   const settingsResetBtn = document.getElementById("settingsResetBtn");
   const settingsSaveBtn = document.getElementById("settingsSaveBtn");
   const settingsExportBtn = document.getElementById("settingsExportBtn");
+  const settingsJsonSaveBtn = document.getElementById("settingsJsonSaveBtn");
+  const settingsJsonLoadBtn = document.getElementById("settingsJsonLoadBtn");
+  const jsonLoadInput = document.getElementById("jsonLoadInput");
 
   const bibleVerIdInput = document.getElementById("bibleVerIdInput");
   const bibleStatusText = document.getElementById("bibleStatusText");
@@ -1836,6 +1839,77 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  // 저장 시각을 파일 이름에 붙여서, 여러 번 저장해도 서로 구분되게 한다.
+  function timestampForFilename() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+  }
+
+  // 지금 화면 데이터(제목, 항목 전체)만 작은 JSON 파일로 내려받는다. 프로그램
+  // 파일 자체는 그대로 두고 데이터만 따로 챙겨두는 용도 — 급할 때 폰에서
+  // 저장해뒀다가, 나중에 "JSON 불러오기"로 다시 채워 넣을 수 있다.
+  function downloadJsonData() {
+    const data = { serviceTitle, hymnFolder, items };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = sanitizeFilename(serviceTitle) + "_" + timestampForFilename() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  // "JSON 불러오기"로 고른 파일을 읽어 화면 데이터를 그 내용으로 채운다.
+  // 예전 구조로 저장된 JSON이 섞여 있어도 migrateItem으로 지금 구조에 맞춘다.
+  function loadJsonFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.items) || !parsed.items.length) {
+          alert("이 파일에서 예배 순서 데이터를 찾지 못했습니다. 이 프로그램에서 저장한 JSON 파일이 맞는지 확인해주세요.");
+          return;
+        }
+        serviceTitle = parsed.serviceTitle || defaultServiceTitle;
+        hymnFolder = parsed.hymnFolder || defaultHymnFolder;
+        items = parsed.items.map(migrateItem);
+        draftItems = cloneItems(items);
+        expandedItemId = null;
+        if (serviceTitleInput) serviceTitleInput.value = serviceTitle;
+        if (hymnFolderInput) hymnFolderInput.value = hymnFolder;
+        saveState();
+        renderItemsEditor();
+        renderList();
+        alert("JSON 파일의 내용을 불러왔습니다.");
+      } catch (e) {
+        alert("파일을 읽는 데 실패했습니다: " + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  if (settingsJsonSaveBtn) {
+    settingsJsonSaveBtn.addEventListener("click", () => {
+      serviceTitle = serviceTitleInput.value.trim() || defaultServiceTitle;
+      hymnFolder = hymnFolderInput.value.trim() || defaultHymnFolder;
+      items = cloneItems(draftItems);
+      saveState();
+      downloadJsonData();
+    });
+  }
+
+  if (settingsJsonLoadBtn && jsonLoadInput) {
+    settingsJsonLoadBtn.addEventListener("click", () => jsonLoadInput.click());
+    jsonLoadInput.addEventListener("change", () => {
+      const file = jsonLoadInput.files && jsonLoadInput.files[0];
+      if (file) loadJsonFile(file);
+      jsonLoadInput.value = "";
+    });
   }
 
   settingsSaveBtn.addEventListener("click", () => {
