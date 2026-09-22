@@ -483,16 +483,29 @@
     return null;
   }
 
-  async function hymnSheetBlock(item) {
-    if (item.hymnImage) {
-      return `<img class="hymn-sheet-image" src="${item.hymnImage}" alt="찬송가 ${item.hymnNum || ""}장 악보">`;
+  async function hymnSheetImageBlock(num, image) {
+    if (image) {
+      return `<img class="hymn-sheet-image" src="${image}" alt="찬송가 ${num || ""}장 악보">`;
     }
-    const clean = cleanHymnNum(item.hymnNum);
+    const clean = cleanHymnNum(num);
     if (clean) {
       const src = await resolveHymnImageAny(clean);
-      if (src) return `<img class="hymn-sheet-image" src="${src}" alt="찬송가 ${item.hymnNum || ""}장 악보">`;
+      if (src) return `<img class="hymn-sheet-image" src="${src}" alt="찬송가 ${num || ""}장 악보">`;
+      return `<div class="hymn-sheet-placeholder">"${num}" 악보 사진을 찾지 못했습니다.<br>설정에서 이 찬송 항목에 악보 사진을 올려주세요.</div>`;
     }
-    return `<div class="hymn-sheet-placeholder">악보 사진이 아직 없습니다.<br>설정에서 이 찬송 항목에 악보 사진을 올려주세요.</div>`;
+    return "";
+  }
+
+  async function hymnSheetBlock(item) {
+    const primary = await hymnSheetImageBlock(item.hymnNum, item.hymnImage);
+    const secondary = (item.hymnNum2 || item.hymnImage2)
+      ? await hymnSheetImageBlock(item.hymnNum2, item.hymnImage2)
+      : "";
+    const blocks = [primary, secondary].filter(Boolean);
+    if (!blocks.length) {
+      return `<div class="hymn-sheet-placeholder">악보 사진이 아직 없습니다.<br>설정에서 이 찬송 항목에 악보 사진을 올려주세요.</div>`;
+    }
+    return blocks.join("");
   }
 
   let idCounter = 0;
@@ -656,9 +669,10 @@
     if (item.type === "찬송") {
       const sheet = await hymnSheetBlock(item);
       // 멘트입력칸에 직접 써둔 멘트가 있으면 그걸 쓰고, 없으면 기본 문구를 자동으로 만든다.
+      const hymnNums = [item.hymnNum, item.hymnNum2].filter(n => n && n.trim());
       const caption = (item.content && item.content.trim())
         ? item.content.trim()
-        : (item.hymnNum ? "다 함께 찬송가 " + item.hymnNum + "장을 부르겠습니다" : "");
+        : (hymnNums.length ? "다 함께 찬송가 " + hymnNums.map(n => n + "장").join(", ") + "을 부르겠습니다" : "");
       // 몇 장인지는 멘트 문구와 악보 자체에 이미 나와 있으므로, 화면 공간만
       // 차지하는 별도의 큰 숫자 표시는 넣지 않는다.
       return [
@@ -1637,6 +1651,18 @@
           ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
           ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>` : ""}
         </div>
+        <div class="field-group-title" style="margin-top:16px;">찬송 2곡째 (함께 부를 때만 입력, 선택사항)</div>
+        <div class="settings-field">
+          <label>찬송가 장 번호 2 (또는 CCM 제목)</label>
+          <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="예: 289">
+        </div>
+        <div class="settings-field">
+          <label>찬송가 악보 사진 2 (직접 올리기 — 없으면 악보 폴더에서 자동으로 찾습니다)</label>
+          <input type="file" accept="image/*" class="hymn-image-input-2">
+          ${item.hymnImage2 ? `<img class="hymn-image-preview" src="${item.hymnImage2}" alt="악보2 미리보기">` : ""}
+          ${item.hymnImage2 ? `<button type="button" class="hymn-image-remove-btn-2 settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
+          ${!item.hymnImage2 ? `<button type="button" class="hymn-auto-preview-btn-2 preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result-2"></div>` : ""}
+        </div>
       </div>
     `;
 
@@ -1768,6 +1794,54 @@
         const src = clean ? await resolveHymnImageAny(clean) : null;
         hymnAutoPreviewBtn.textContent = original;
         hymnAutoPreviewBtn.disabled = false;
+        if (resultEl) {
+          resultEl.innerHTML = src
+            ? `<img class="hymn-image-preview" src="${src}" alt="자동매칭 미리보기">`
+            : `<div class="settings-hint" style="margin:8px 0 0;">"${clean || "(번호 없음)"}"에 해당하는 악보를 찾지 못했습니다. 위 "자료 폴더 선택해서 연결하기"로 사진을 연결했는지, 또는 악보 폴더 경로에 그 이름의 파일이 있는지 확인해주세요.</div>`;
+        }
+      });
+    }
+
+    const hymnNumInput2 = panel.querySelector(".hymn-num-input-2");
+    if (hymnNumInput2) {
+      hymnNumInput2.addEventListener("input", e => {
+        draftItems[idx].hymnNum2 = e.target.value;
+      });
+    }
+
+    const hymnImageInput2 = panel.querySelector(".hymn-image-input-2");
+    if (hymnImageInput2) {
+      hymnImageInput2.addEventListener("change", e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          draftItems[idx].hymnImage2 = reader.result;
+          renderItemsEditor();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const hymnImageRemoveBtn2 = panel.querySelector(".hymn-image-remove-btn-2");
+    if (hymnImageRemoveBtn2) {
+      hymnImageRemoveBtn2.addEventListener("click", () => {
+        draftItems[idx].hymnImage2 = null;
+        renderItemsEditor();
+      });
+    }
+
+    const hymnAutoPreviewBtn2 = panel.querySelector(".hymn-auto-preview-btn-2");
+    if (hymnAutoPreviewBtn2) {
+      hymnAutoPreviewBtn2.addEventListener("click", async () => {
+        const resultEl = panel.querySelector(".hymn-auto-preview-result-2");
+        const original = hymnAutoPreviewBtn2.textContent;
+        hymnAutoPreviewBtn2.textContent = "확인 중…";
+        hymnAutoPreviewBtn2.disabled = true;
+        const clean = cleanHymnNum(draftItems[idx].hymnNum2);
+        const src = clean ? await resolveHymnImageAny(clean) : null;
+        hymnAutoPreviewBtn2.textContent = original;
+        hymnAutoPreviewBtn2.disabled = false;
         if (resultEl) {
           resultEl.innerHTML = src
             ? `<img class="hymn-image-preview" src="${src}" alt="자동매칭 미리보기">`
