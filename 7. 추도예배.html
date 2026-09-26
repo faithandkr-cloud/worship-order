@@ -57,7 +57,7 @@
           <div class="order-desc">시편 127:1~5</div>
         </div>
         <div class="order-arrow">›</div>
-      </button></li><li><button class="order-item" data-id="item-1788394409221-43">
+      </button></li><li><button class="order-item current" data-id="item-1788394409221-43">
         <div class="order-num">4</div>
         <div class="order-body">
           <div class="order-title">설교</div>
@@ -90,13 +90,13 @@
 
 <div class="detail-overlay" id="detailOverlay">
   <div class="detail-header">
-    <div class="detail-header-title" id="detailHeaderTitle"></div>
+    <div class="detail-header-title" id="detailHeaderTitle">설교</div>
     <button class="detail-close" id="detailClose" aria-label="닫기">✕</button>
   </div>
 
   <div class="pager-wrap">
     <div class="pager-viewport" id="pagerViewport">
-      <div class="pager-viewport-inner" id="pagerInner"></div>
+      <div class="pager-viewport-inner" id="pagerInner"><div class="section-label">설교</div><p class="para para-line">시편 127편</p><p class="para para-line">1 여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되며 여호와께서 성을 지키지 아니하시면 파수꾼의 깨어 있음이 헛되도다</p><p class="para para-line">2 너희가 일찍이 일어나고 늦게 누우며 수고의 떡을 먹음이 헛되도다 그러므로 여호와께서 그의 사랑하시는 자에게는 잠을 주시는도다</p><p class="para para-line">3 보라 자식들은 여호와의 기업이요 태의 열매는 그의 상급이로다</p><p class="para para-line">4 젊은 자의 자식은 장사의 수중의 화살 같으니</p><p class="para">5 이것이 그의 화살통에 가득한 자는 복되도다 그들이 성문에서 그들의 원수와 담판할 때에 수치를 당하지 아니하리로다</p><p class="para para-line">시편은 주로 다윗이 쓴가 주를 이룹니다</p><p class="para para-line">그 중에서 몇편은 다윗 이외의 사람이 쓴 시들입니다.</p><p class="para para-line">그 중에서 오늘 시편 127편은 솔로몬이 쓴 시입니다.</p><p class="para para-line">솔로몬이 왕이 되어서 왕궁을 지어보고 솔로몬 성전을 지어보면서 느낀 것을 이 시에 담게 되었습니다.</p><p class="para">어떤 깨달음이 있었습니까?</p><p class="para para-line">은 사람의 수고가 얼마나 미천한가를 깨닫습니다.</p></div>
     </div>
     <div class="tap-zone left" id="tapLeft"></div>
     <div class="tap-zone right" id="tapRight"></div>
@@ -104,7 +104,7 @@
 
   <div class="detail-footer">
     <button class="page-nav-btn" id="prevBtn" disabled="">‹ 이전</button>
-    <div class="page-indicator" id="pageIndicator"></div>
+    <div class="page-indicator" id="pageIndicator">1 / 5</div>
     <button class="page-nav-btn" id="nextBtn">다음 ›</button>
   </div>
 </div>
@@ -227,7 +227,7 @@
           <button type="button" class="item-row-delete danger" title="삭제">삭제</button>
         </div>
       </div>
-    </div></div><div><div class="item-row">
+    </div></div><div><div class="item-row expanded">
       <div class="item-row-top">
         <div class="item-row-main">
           <span class="item-row-num">3</span>
@@ -246,6 +246,99 @@
           <button type="button" class="item-row-up" title="위로">▲</button>
           <button type="button" class="item-row-down" title="아래로">▼</button>
           <button type="button" class="item-row-delete danger" title="삭제">삭제</button>
+        </div>
+      </div>
+    </div><div class="item-detail">
+      <div class="item-detail-hint">이 항목만 수정합니다. 다 끝나면 목록으로 접어두고 다음 항목을 눌러 이어서 편집하세요.</div>
+
+      <div class="field-row">
+        <div class="settings-field field-title">
+          <label class="field-label-strong">제목</label>
+          <input type="text" class="title-input" value="대표기도" placeholder="예: 특별순서">
+        </div>
+        <div class="settings-field field-num">
+          <label class="field-label-strong">번호</label>
+          <input type="text" class="num-input" value="3" placeholder="번호">
+        </div>
+      </div>
+      <label class="checkbox-field" style="margin:0 0 14px;">
+        <input type="checkbox" class="sub-checkbox">
+        하위 항목(번호 없이 · 표시)
+      </label>
+
+      <div class="settings-field" style="margin:28px 0 32px;">
+        <label class="field-label-strong">멘트입력칸 (사회자가 실제로 말할 문구)</label>
+        <textarea class="content-input" placeholder="예: 이 시간 찬송가 50장을 다함께 부르겠습니다" style="height: 88px;">예배를 위해서 김미애사모님이 대표로 기도해 주시겠습니다.</textarea>
+      </div>
+
+      <div class="field-group long-content-field hidden">
+        <div class="field-group-title">내용</div>
+        <div class="settings-field">
+          <textarea class="long-content-input" placeholder="이곳에 내용을 입력하세요." style="height: 0px;"></textarea>
+        </div>
+      </div>
+
+      <div class="field-group gyodokmun-field hidden">
+        <div class="field-group-title">교독문 내용</div>
+        <div class="settings-field">
+          <label>번호로 자동 검색해서 채우거나, 직접 입력·수정할 수 있습니다</label>
+          <textarea class="gyodokmun-text-input" placeholder="예: 인도 / 하나님이여 주의 판단력을 왕에게 주시고 주의 공의를 왕의 아들에게 주소서
+회중 / 그가 주의 백성을 공의로 재판하며 주의 가난한 자로 정의를 재판하리니" style="height: 0px;"></textarea>
+        </div>
+      </div>
+
+      <div class="field-group scripture-field hidden">
+        <div class="field-group-title">성경 관련 데이터</div>
+        <div class="settings-field">
+          <label>성경주소</label>
+          <input type="text" class="scripture-ref-input" value="" placeholder="예: 디모데후서 4:7~8">
+        </div>
+        <div class="settings-field">
+          <label>성경 본문</label>
+          <textarea class="scripture-text-input"></textarea>
+          <button type="button" class="scripture-autofill-btn preset-btn" style="margin-top:8px;">📖 연결된 성경에서 자동 채우기</button>
+        </div>
+        
+      </div>
+
+      <div class="field-group sermon-field hidden">
+        <div class="field-group-title">설교내용</div>
+        <div class="settings-field">
+          <textarea class="sermon-content-input sermon-content-textarea" placeholder="설교 본문(원고)을 이곳에 붙여넣으세요. 성경주소·본문은 이미 성경봉독 항목에 있으니 여기서는 따로 넣지 않아도 됩니다." style="height: 0px;"></textarea>
+        </div>
+      </div>
+
+      <div class="field-group fixed-field hidden">
+        <div class="field-group-title fixed-field-title">대표기도 내용</div>
+        <div class="settings-field">
+          <textarea class="fixed-text-input" placeholder="한번 입력해두면 계속 그대로 사용됩니다." style="height: 0px;"></textarea>
+        </div>
+      </div>
+
+      <div class="field-group hymn-field hidden">
+        <div class="field-group-title">찬송 관련 데이터</div>
+        <div class="settings-field">
+          <label>찬송가 장 번호 (또는 CCM 제목)</label>
+          <input type="text" class="hymn-num-input" value="" placeholder="예: 488">
+        </div>
+        <div class="settings-field">
+          <label>찬송가 악보 사진 (직접 올리기 — 없으면 악보 폴더에서 자동으로 찾습니다)</label>
+          <input type="file" accept="image/*" class="hymn-image-input">
+          
+          
+          <button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>
+        </div>
+        <div class="field-group-title" style="margin-top:16px;">찬송 2곡째 (함께 부를 때만 입력, 선택사항)</div>
+        <div class="settings-field">
+          <label>찬송가 장 번호 2 (또는 CCM 제목)</label>
+          <input type="text" class="hymn-num-input-2" value="" placeholder="예: 289">
+        </div>
+        <div class="settings-field">
+          <label>찬송가 악보 사진 2 (직접 올리기 — 없으면 악보 폴더에서 자동으로 찾습니다)</label>
+          <input type="file" accept="image/*" class="hymn-image-input-2">
+          
+          
+          <button type="button" class="hymn-auto-preview-btn-2 preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result-2"></div>
         </div>
       </div>
     </div></div><div><div class="item-row">
@@ -379,7 +472,7 @@
   </div>
 </div>
 
-<script id="embeddedData" type="application/json">{"serviceTitle":"추석가정예배","hymnFolder":"찬송가/","items":[{"id":"item-1790389304622-2","num":"9","sub":false,"hidden":false,"title":"찬송","desc":"412","type":"찬송","content":"","hymnNum":"412","hymnCaption":""},{"id":"item-1788394409221-40","num":"2","sub":false,"title":"통성기도","desc":"다같이","type":"일반","content":"다같이 예배를 위해서 함께 기도하겠습니다.","longContent":"\n"},{"id":"item-1788394409221-41","num":"3","sub":false,"title":"대표기도","desc":"송재산 전도사님","type":"일반","content":"예배를 위해서 김미애사모님이 대표로 기도해 주시겠습니다."},{"id":"item-1790389024204-1","num":"9","sub":false,"hidden":false,"title":"성경봉독","desc":"시편 127:1~5","type":"성경본문","content":"","scriptureRef":"시편 127:1~5","scriptureText":""},{"id":"item-1788394409221-43","sub":false,"title":"설교","desc":"하나님이 주시는 은혜와 축복","type":"설교","content":"","num":"4","sermonContent":"시편 127편\n1 여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되며 여호와께서 성을 지키지 아니하시면 파수꾼의 깨어 있음이 헛되도다\n2 너희가 일찍이 일어나고 늦게 누우며 수고의 떡을 먹음이 헛되도다 그러므로 여호와께서 그의 사랑하시는 자에게는 잠을 주시는도다\n3 보라 자식들은 여호와의 기업이요 태의 열매는 그의 상급이로다\n4 젊은 자의 자식은 장사의 수중의 화살 같으니\n5 이것이 그의 화살통에 가득한 자는 복되도다 그들이 성문에서 그들의 원수와 담판할 때에 수치를 당하지 아니하리로다\n\n\n시편은 주로 다윗이 쓴가 주를 이룹니다\n그 중에서 몇편은 다윗 이외의 사람이 쓴 시들입니다.\n그 중에서 오늘 시편 127편은 솔로몬이 쓴 시입니다.\n솔로몬이 왕이 되어서 왕궁을 지어보고 솔로몬 성전을 지어보면서 느낀 것을 이 시에 담게 되었습니다.\n어떤 깨달음이 있었습니까?\n\n은 사람의 수고가 얼마나 미천한가를 깨닫습니다.\n그 훌륭한 성전과 왕궁을 짓다보니 하나님이 도와주시지 않으면 아무것도 이룰 수 없음을 알게 되었습니다.\n\n그 깨달음을 이 시에 담게 됩니다.\n\n\n가. 여호와께서 세우지 아니하시면 (1~2절)\n시편 기자는 \"여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되다\"고 고백합니다. \n솔로몬이 왕이 되어서 왕궁을 지어보고 솔로몬 성전을 지어보면서 느낀 것은 사람의 수고가 얼마나 미천한가를 깨닫습니다.\n그 훌륭한 성전과 왕궁을 짓다보니 하나님이 도와주시지 않으면 아무것도 이룰 수 없음을 알게 되었다는 것입니다.\n우리의 삶이 그렇습니다.\n우리가 수고한 대로 우리의 삶이 움직여 간다면 얼마나 기쁘겠습니까?\n그런데 살다보면 내가 수고했다고 해서 내가 수고한 떡을 먹게 되는 것은 아님을 우리는 인생에서 배웁니다.\n \n우리가 지난 한 해 동안 땀 흘려 일하고 가정을 지키기 위해서 또는 내 꿈을 위해서 정말 애써왔습니다.\n그런데 그 모든 수고를 의미 있게 만드시는 분은 하나님이심을 믿습니다. \n이 믿음이 우리 모두에게 있어지길 축원합니다.\n이것이 믿어지는 사람은 하나님을 더 의지할 것이고, \n이것이 믿어지지 않으면 내 힘과 힘 능력으로 살 것입니다.\n\n우리 인생을 세우시는 하나님을 생각하면서 \n한 해동안 함께 하신 하나님께 감사하고, 이 후로 하나님을 더 의지하기로 믿음의 결단이 있는 추석이 되시길 주님의 이름으로 축원합니다.\n\n\n솔로몬이 두번째로 깨달은 것은 \n나. 하나님을 사랑하시는 자에게 하나님은 평안을 주신다는 것입니다. (2절)\n2절입니다.\n\"여호와께서 그의 사랑하시는 자에게는 잠을 주시는도다\"\n\n여러분 잠은 염려와 불안이 있으면 잘 오지 않습니다.\n하지만 그런데 마음에 평강이 있으면 밤에 깊은 잠을 잘 수 있는 것입니다.\n그런데 하나님을 사랑하는 자에게는 하나님이 잠을 주신답니다.\n다시 말해서 그 만큼 하나님이 마음의 평강과 안전감을 주신다는 의미입니다.\n하나님이 함께 하시니 걱정할 것이 없는 것입니다.\n하나님이 함께 하시니 두려워할 것이 없는 것입니다.\n하나님이 함께 하시는 근심할 것이 없는 것입니다.\n\n그래서 만왕의 왕, 만주의 주이신 하나님꼐서 나와 함께 하신다는 그 믿음이 있는 자는 마음에 평강이 찾아오는 것입니다.\n\n원하옵기는 하나님을 정말 사랑하는 서람들이 되어서, \n근심과 걱정을 이겨내고 하나님이 주시는 평강을 누리시길 주님의 이름으로 축원합니다.\n\n솔로몬이 세번째로 깨달은 것은 \n다. 하나님이 주신 기업, 자녀들이 여호와의 기업이요 상급이라는 것입니다. (3~5절)\n왜 그렇습니까?\n솔로몬이 주위를 바라 보니 젊은 자의 자녀가 있는 집은 미래의 소망이 넘치더라는 것입니다.\n왜요?\n마치 젊은 자녀들은 군인들의 손 안 있는 화살과 같아서 \n그 자녀들이 가정을 지키고 우리 가정의 미래의 소망되기 때문이라는 것입니다.\n그래서 가정마다 자녀들이 얼마나 소중한지 모릅니다.\n특히 믿음의 자녀는 얼마나 가정의 힘이 되고 위로가 되는지 모릅니다.\n\n여러분 가정은 내가 소유한 것이 아니라 하나님이 우리에게 맡겨주신 거룩한 터전인 줄 믿습니다. \n이 터전 안에서 주님이 주신 귀한 자녀들을 신앙으로 잘 양육하고 자녀들의 미래를 위해서 기도하여 하나님 나라의 큰 일꾼들로 만들어서, 우리의 사역과 가정이 더욱 더 든든하고 소망이 넘치시길 주님의 이름으로 축원합니다.\n\n\n합심 기도:\n지난 시간 동안 우리 가정을 지켜주신 하나님의 은혜에 감사드립니다.\n우리 자녀들과 후손들이 하나님의 말씀 안에서 지혜롭고 건강하게 자라게 하소서.\n우리의 하는 모든 일들이 복되고 아름다운 일들이 넘치도록 함께 기도합시다. \n\n특히 누님 건강지켜주시고 하는 일터에서 평강이 있고 안전감이 있도록 위해서 기도합시다.\n그리고 믿음도 생기도록 위해서 기도합시다.\n디딤사역과 은혜가풍성한교회를 위해서 함께 기도합시다."},{"id":"item-1790389589171-3","num":"9","sub":false,"hidden":false,"title":"찬송","desc":"559","type":"찬송","content":"","hymnNum":"559","hymnCaption":""},{"id":"item-1789126921399-1","num":"7","sub":false,"hidden":false,"title":"광고","desc":"담임목사","type":"일반","content":""},{"id":"item-1789189338386-3","num":"8","sub":false,"hidden":false,"title":"주기도문","desc":"예배를 마치며","type":"고정문구","content":"다같이 주기도문 하심으로 모든 예배를 마치도록 하겠습니다.\n함께 기도하겠습니다.","fixedText":"하늘에 계신 우리 아버지여, 이름이 거룩히 여김을 받으시오며,\n나라이 임하옵시며, 뜻이 하늘에서 이룬 것같이 땅에서도 이루어지이다.\n오늘날 우리에게 일용할 양식을 주옵시고,\n우리가 우리에게 죄 지은 자를 사하여 준 것같이 우리 죄를 사하여 주옵시고,\n우리를 시험에 들게 하지 마옵시고, 다만 악에서 구하옵소서.\n대개 나라와 권세와 영광이 아버지께 영원히 있사옵나이다. 아멘."}]}</script>
+<script id="embeddedData" type="application/json">{"serviceTitle":"추석가정예배","hymnFolder":"찬송가/","items":[{"id":"item-1790389304622-2","num":"9","sub":false,"hidden":false,"title":"찬송","desc":"412","type":"찬송","content":"","hymnNum":"412","hymnCaption":""},{"id":"item-1788394409221-40","num":"2","sub":false,"title":"통성기도","desc":"다같이","type":"일반","content":"다같이 예배를 위해서 함께 기도하겠습니다.","longContent":"\n"},{"id":"item-1788394409221-41","num":"3","sub":false,"title":"대표기도","desc":"송재산 전도사님","type":"일반","content":"예배를 위해서 송재산전도사님이 대표로 기도해 주시겠습니다."},{"id":"item-1790389024204-1","num":"9","sub":false,"hidden":false,"title":"성경봉독","desc":"시편 127:1~5","type":"성경본문","content":"","scriptureRef":"시편 127:1~5","scriptureText":""},{"id":"item-1788394409221-43","sub":false,"title":"설교","desc":"하나님이 주시는 은혜와 축복","type":"설교","content":"시편 127편\n1 여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되며 여호와께서 성을 지키지 아니하시면 파수꾼의 깨어 있음이 헛되도다\n2 너희가 일찍이 일어나고 늦게 누우며 수고의 떡을 먹음이 헛되도다 그러므로 여호와께서 그의 사랑하시는 자에게는 잠을 주시는도다\n3 보라 자식들은 여호와의 기업이요 태의 열매는 그의 상급이로다\n4 젊은 자의 자식은 장사의 수중의 화살 같으니\n5 이것이 그의 화살통에 가득한 자는 복되도다 그들이 성문에서 그들의 원수와 담판할 때에 수치를 당하지 아니하리로다\n\n\n시편은 주로 다윗이 쓴가 주를 이룹니다 73\n그 중에서 몇편은 다윗 이외의 사람이 쓴 시들입니다. 77\n그 중에서 오늘 시편 127편은 솔로몬이 쓴 시입니다. 2\n솔로몬이 왕이 되어서 왕궁을 지어보고 솔로몬 성전을 지어보면서 느낀 것을 이 시에 담게 되었습니다.\n어떤 깨달음이 있었습니까?\n\n\n가. 여호와께서 세우지 아니하시면 (1~2절)\n \"여호와께서 집을 세우지 아니하시면 세우는 자의 수고가 헛되다\"고 고백합니다. \n솔로몬이 왕이 되어서 왕궁을 지어보고 솔로몬 성전을 지어보면서 느낀 것은 사람의 수고가 얼마나 미천한가를 깨닫습니다.\n그 훌륭한 성전과 왕궁을 짓다보니 하나님이 도와주시지 않으면 아무것도 이룰 수 없음을 알게 되었다는 것입니다.\n우리의 삶이 그렇습니다.\n우리가 수고한 대로 우리의 삶이 움직여 간다면 얼마나 기쁘겠습니까?\n그런데 살다보면 내가 수고했다고 해서 내가 수고한 떡을 먹게 되는 것은 아님을 우리는 인생에서 배웁니다.\n \n우리가 지난 한 해 동안 땀 흘려 일하고 가정을 지키기 위해서 또는 내 꿈을 위해서 정말 애써왔습니다.\n그런데 그 모든 수고를 의미 있게 만드시는 분은 하나님이심을 믿습니다. \n이 믿음이 우리 모두에게 있어지길 축원합니다.\n이것이 믿어지는 사람은 하나님을 더 의지할 것이고, \n이것이 믿어지지 않으면 내 힘과 힘 능력으로 살 것입니다.\n\n우리 인생을 세우시는 하나님을 생각하면서 \n한 해동안 함께 하신 하나님께 감사하고, 이 후로 하나님을 더 의지하기로 믿음의 결단이 있는 추석이 되시길 주님의 이름으로 축원합니다.\n\n\n솔로몬이 두번째로 깨달은 것은 \n나. 하나님을 사랑하시는 자에게 하나님은 평안을 주신다는 것입니다. (2절)\n2절입니다.\n\"여호와께서 그의 사랑하시는 자에게는 잠을 주시는도다\"\n\n여러분 잠은 염려와 불안이 있으면 잘 오지 않습니다.\n하지만 그런데 마음에 평강이 있으면 밤에 깊은 잠을 잘 수 있는 것입니다.\n그런데 하나님을 사랑하는 자에게는 하나님이 잠을 주신답니다.\n다시 말해서 그 만큼 하나님이 마음의 평강과 안전감을 주신다는 의미입니다.\n하나님이 함께 하시니 걱정할 것이 없는 것입니다.\n하나님이 함께 하시니 두려워할 것이 없는 것입니다.\n하나님이 함께 하시는 근심할 것이 없는 것입니다.\n\n그래서 만왕의 왕, 만주의 주이신 하나님꼐서 나와 함께 하신다는 그 믿음이 있는 자는 마음에 평강이 찾아오는 것입니다.\n\n원하옵기는 하나님을 정말 사랑하는 서람들이 되어서, \n근심과 걱정을 이겨내고 하나님이 주시는 평강을 누리시길 주님의 이름으로 축원합니다.\n\n솔로몬이 세번째로 깨달은 것은 \n다. 하나님이 주신 기업, 자녀들이 여호와의 기업이요 상급이라는 것입니다. (3~5절)\n왜 그렇습니까?\n솔로몬이 주위를 바라 보니 젊은 자의 자녀가 있는 집은 미래의 소망이 넘치더라는 것입니다.\n왜요?\n마치 젊은 자녀들은 군인들의 손 안 있는 화살과 같아서 \n그 자녀들이 가정을 지키고 우리 가정의 미래의 소망되기 때문이라는 것입니다.\n그래서 가정마다 자녀들이 얼마나 소중한지 모릅니다.\n특히 믿음의 자녀는 얼마나 가정의 힘이 되고 위로가 되는지 모릅니다.\n\n여러분 가정은 내가 소유한 것이 아니라 하나님이 우리에게 맡겨주신 거룩한 터전인 줄 믿습니다. \n이 터전 안에서 주님이 주신 귀한 자녀들을 신앙으로 잘 양육하고 자녀들의 미래를 위해서 기도하여 하나님 나라의 큰 일꾼들로 만들어서, 우리의 사역과 가정이 더욱 더 든든하고 소망이 넘치시길 주님의 이름으로 축원합니다.\n\n\n합심 기도:\n지난 시간 동안 우리 가정을 지켜주신 하나님의 은혜에 감사드립니다.\n우리 자녀들이 하나님의 말씀 안에서 지혜롭고 건강하게 자라게 하소서.\n우리의 하는 모든 일들이 복되고 아름다운 일들이 넘치도록 함께 기도합시다. \n\n특히 누님 건강지켜주시고 하는 일터에서 평강이 있고 안전감이 있도록 위해서 기도합시다.\n그리고 믿음도 생기도록 위해서 기도합시다.\n디딤사역과 은혜가풍성한교회를 위해서 함께 기도합시다.","num":"4","sermonContent":""},{"id":"item-1790389589171-3","num":"9","sub":false,"hidden":false,"title":"찬송","desc":"559","type":"찬송","content":"","hymnNum":"559","hymnCaption":""},{"id":"item-1789126921399-1","num":"7","sub":false,"hidden":false,"title":"광고","desc":"담임목사","type":"일반","content":""},{"id":"item-1789189338386-3","num":"8","sub":false,"hidden":false,"title":"주기도문","desc":"예배를 마치며","type":"고정문구","content":"다같이 주기도문 하심으로 모든 예배를 마치도록 하겠습니다.\n함께 기도하겠습니다.","fixedText":"하늘에 계신 우리 아버지여, 이름이 거룩히 여김을 받으시오며,\n나라이 임하옵시며, 뜻이 하늘에서 이룬 것같이 땅에서도 이루어지이다.\n오늘날 우리에게 일용할 양식을 주옵시고,\n우리가 우리에게 죄 지은 자를 사하여 준 것같이 우리 죄를 사하여 주옵시고,\n우리를 시험에 들게 하지 마옵시고, 다만 악에서 구하옵소서.\n대개 나라와 권세와 영광이 아버지께 영원히 있사옵나이다. 아멘."}]}</script>
 
 <script src="./common-gyodokmun-data.js"></script>
 
