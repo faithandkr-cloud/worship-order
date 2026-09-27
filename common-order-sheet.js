@@ -1020,6 +1020,84 @@
   const settingsJsonLoadBtn = document.getElementById("settingsJsonLoadBtn");
   const jsonLoadInput = document.getElementById("jsonLoadInput");
 
+  // ── 맨 아래 저장 버튼들을 한 줄로 합치기 ──────────────────────
+  // "브라우저 저장 / 로컬 저장(파일로)" 한 줄 + "JSON 저장 / JSON 불러오기"
+  // 한 줄, 이렇게 두 줄로 나뉘어 있던 것을 한 줄로 합치고, 버튼 글자 안의
+  // 괄호 설명("(파일로)")도 지운다. 여기서 코드로 처리해두면, 이 스크립트를
+  // 같이 쓰는 다른 예배 순서지 페이지들도 HTML을 따로 고치지 않아도
+  // 똑같이 한 줄로 보인다.
+  (function consolidateSaveButtonsRow() {
+    const row1 = settingsSaveBtn && settingsSaveBtn.closest(".settings-save-row");
+    const row2 = settingsJsonSaveBtn && settingsJsonSaveBtn.closest(".settings-save-row");
+    if (settingsExportBtn && settingsExportBtn.textContent.includes("로컬 저장")) {
+      settingsExportBtn.textContent = "로컬 저장";
+    }
+    if (!row1 || !row2 || row1 === row2) return;
+    row1.classList.add("settings-save-row-compact");
+    Array.from(row2.childNodes).forEach(node => row1.appendChild(node));
+    row2.remove();
+  })();
+
+  // 되돌리기 버튼의 용도를 눌러보지 않아도 알 수 있도록 말풍선 설명을 붙인다.
+  if (settingsResetBtn) {
+    settingsResetBtn.title = "지금 화면에서 편집 중인 모든 순서 항목을 앱의 기본 예배 순서로 되돌립니다. 저장(브라우저 저장 등)을 누르지 않았어도 편집 중인 내용은 바로 사라지니, 되돌리기 전에 필요한 내용은 미리 저장해두세요.";
+  }
+
+  // ── 항목 편집 팝업(바텀시트) ──────────────────────────────────
+  // 예전에는 항목을 누르면 편집 칸이 그 항목 바로 아래, 목록 안에 끼워
+  // 넣어졌다(그래서 아래 항목들이 밀려 내려갔다). 지금은 그 대신 화면
+  // 하단에서 올라오는 별도 팝업에 편집 칸을 띄우므로, 목록의 다른 줄은
+  // 전혀 움직이지 않는다. 이 팝업은 모든 순서지 페이지가 공유하는 이
+  // 스크립트에서 직접 만들어 붙이므로, 페이지별 HTML을 따로 고치지
+  // 않아도 된다.
+  const itemDetailOverlay = document.createElement("div");
+  itemDetailOverlay.className = "item-detail-overlay";
+  itemDetailOverlay.id = "itemDetailOverlay";
+  itemDetailOverlay.innerHTML = `
+    <div class="item-detail-backdrop" id="itemDetailBackdrop"></div>
+    <div class="item-detail-sheet">
+      <div class="item-detail-sheet-header">
+        <div class="item-detail-sheet-title" id="itemDetailSheetTitle"></div>
+        <button type="button" class="detail-close" id="itemDetailCloseBtn" aria-label="닫기">✕</button>
+      </div>
+      <div class="item-detail-sheet-body" id="itemDetailSheetBody"></div>
+    </div>
+  `;
+  document.body.appendChild(itemDetailOverlay);
+  const itemDetailBackdrop = document.getElementById("itemDetailBackdrop");
+  const itemDetailSheetTitle = document.getElementById("itemDetailSheetTitle");
+  const itemDetailSheetBody = document.getElementById("itemDetailSheetBody");
+  const itemDetailCloseBtn = document.getElementById("itemDetailCloseBtn");
+
+  // 팝업 안 입력칸도 목록과 똑같이 자동저장 대상이 되도록 이벤트 위임을
+  // 따로 걸어준다(예전에는 편집 칸이 itemsEditor 안에 있어서 그 위임에
+  // 자연히 걸렸었다 — 팝업으로 빼내면서 여기서도 같은 걸 걸어줘야 한다).
+  itemDetailSheetBody.addEventListener("input", scheduleAutosave);
+  itemDetailSheetBody.addEventListener("change", scheduleAutosave);
+
+  function closeItemDetailModal() {
+    expandedItemId = null;
+    itemDetailOverlay.classList.remove("open");
+    itemDetailSheetBody.innerHTML = "";
+    itemsEditor.querySelectorAll(".item-row.expanded").forEach(r => r.classList.remove("expanded"));
+  }
+
+  function openItemDetailModal(item, idx, rowEl) {
+    itemsEditor.querySelectorAll(".item-row.expanded").forEach(r => r.classList.remove("expanded"));
+    if (rowEl) rowEl.classList.add("expanded");
+    itemDetailSheetTitle.textContent = (item.sub ? "•" : (item.num || "-")) + "  " + (item.title || "(제목 없음)");
+    itemDetailSheetBody.innerHTML = "";
+    const panel = buildItemDetailPanel(item, idx, rowEl);
+    itemDetailSheetBody.appendChild(panel);
+    itemDetailSheetBody
+      .querySelectorAll(".content-input, .sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
+      .forEach(autoGrowTextarea);
+    itemDetailOverlay.classList.add("open");
+  }
+
+  itemDetailBackdrop.addEventListener("click", closeItemDetailModal);
+  itemDetailCloseBtn.addEventListener("click", closeItemDetailModal);
+
   const bibleVerIdInput = document.getElementById("bibleVerIdInput");
   const bibleStatusText = document.getElementById("bibleStatusText");
   const bibleImportFile = document.getElementById("bibleImportFile");
@@ -1240,6 +1318,7 @@
 
   function closeSettings() {
     flushAutosaveNow(); // ✕로 닫아도 방금 고친 내용이 사라지지 않도록 먼저 저장
+    closeItemDetailModal(); // 항목 편집 팝업이 열려 있었다면 같이 닫는다
     settingsOverlay.classList.remove("open");
   }
 
@@ -1453,11 +1532,26 @@
     // 항목 추가/삭제/순서변경/프리셋 적용처럼 새로 화면을 다시 그리는
     // 경우는 input/change 이벤트가 안 나므로 여기서도 자동 저장을 예약한다.
     scheduleAutosave();
+
+    // 팝업이 열려 있던 항목이면(삭제/재정렬/자동매칭 등으로 목록을 다시
+    // 그린 뒤에도) 최신 데이터로 팝업 내용을 새로 채운다. 그 항목 자체가
+    // 삭제되었으면 팝업을 닫는다.
+    if (expandedItemId) {
+      const idx2 = draftItems.findIndex(it => it.id === expandedItemId);
+      if (idx2 === -1) {
+        closeItemDetailModal();
+      } else {
+        openItemDetailModal(draftItems[idx2], idx2, itemsEditor.children[idx2]);
+      }
+    } else {
+      itemDetailOverlay.classList.remove("open");
+    }
   }
 
-  // 한 항목 = [한 줄 요약 행(+빠른입력)] + (펼쳐진 경우에만) [편집 칸]
+  // 한 항목 = [한 줄 요약 행(+빠른입력)]. 펼쳐진 경우, 편집 칸은 목록 안에
+  // 끼워 넣지 않고 별도의 팝업(item-detail-overlay)에 띄운다 — 그래야
+  // 항목을 눌러도 목록의 다른 줄이 밀려나지 않는다.
   function buildItemRowGroup(item, idx) {
-    const wrap = document.createElement("div");
     const isExpanded = expandedItemId === item.id;
 
     const row = document.createElement("div");
@@ -1538,7 +1632,7 @@
       if (fieldCfg.dataKey !== "desc") draftItems[idx][fieldCfg.dataKey] = val;
       // 교독문은 번호만 입력해도(숫자를 다 치는 순간) 바로 아래 "교독문 내용" 칸에
       // 본문을 채워준다 — 바 자체 글자(입력 중인 숫자)는 그대로 두고 내용만 미리 갱신.
-      if (isGyodokmun) applyGyodokmunMatch(idx, val, null, wrap);
+      if (isGyodokmun) applyGyodokmunMatch(idx, val, null, expandedItemId === item.id ? itemDetailSheetBody : null);
     });
     fieldInput.addEventListener("keydown", e => {
       if (e.key === "Enter") { e.preventDefault(); applyRowFieldMatch(); }
@@ -1560,7 +1654,7 @@
 
       if (isGyodokmun) {
         // 교독문: 로컬 데이터에서 즉시 찾으므로 버튼이 없어도(blur로도) 동작한다.
-        const ok = applyGyodokmunMatch(idx, raw, fieldInput, wrap);
+        const ok = applyGyodokmunMatch(idx, raw, fieldInput, expandedItemId === item.id ? itemDetailSheetBody : null);
         if (fieldBtn) {
           const original = fieldBtn.textContent;
           fieldBtn.disabled = true;
@@ -1601,11 +1695,7 @@
       setTimeout(() => { fieldBtn.textContent = original; }, 1500);
     }
 
-    wrap.appendChild(row);
-    if (isExpanded) {
-      wrap.appendChild(buildItemDetailPanel(item, idx, row));
-    }
-    return wrap;
+    return row;
   }
 
   // 펼쳐진 항목의 실제 편집 칸 — 번호 + 내용/데이터 입력 (제목·설명·유형은 순서 버튼이 이미 정해준다)

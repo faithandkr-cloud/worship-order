@@ -513,23 +513,35 @@
     cursor: pointer;
   }
 
-  .item-row.expanded { border-radius: 10px 10px 0 0; border-color: var(--accent); border-bottom: none; margin-bottom: 0; }
+  /* 편집 팝업이 뜬 항목은 목록에서도 테두리 색으로 표시해준다(팝업은
+     이제 이 줄 아래 붙는 게 아니라 화면 하단에서 따로 뜨므로, 아래쪽을
+     끊지 않고 보통 카드처럼 사방 테두리를 그대로 두른다). */
+  .item-row.expanded { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 
   /* 모든 유형의 바가 항상 같은 구조(번호·제목·배지 + 공용 입력칸 + 조작
-     버튼)를 한 줄에 갖도록 통일한다. 화면이 좁을 때만 자연스럽게
-     줄바꿈되며, 유형에 따라 줄 수 자체가 달라지는 일은 없다. */
-  .item-row-top { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+     버튼)를 한 줄에 갖도록 통일한다. 각 칸을 압축해서 항상 한 줄 안에
+     들어가게 하고(줄바꿈 없음), 아주 좁은 화면 등 정말 안 들어갈 때만
+     안전장치로 가로 스크롤을 허용한다. */
+  .item-row-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .item-row-top::-webkit-scrollbar { display: none; }
 
-  .item-row-main { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 1 auto; }
+  .item-row-main { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
 
   .item-row-num {
     flex: none;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: var(--accent-soft);
     color: var(--accent);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -537,66 +549,68 @@
   }
 
   .item-row-title {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 108px;
+    max-width: 64px;
   }
 
   .item-row-badge {
     flex: none;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--muted);
     background: var(--accent-soft);
-    padding: 3px 9px;
+    padding: 2px 7px;
     border-radius: 20px;
+    white-space: nowrap;
   }
 
   .item-row-field {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex: 1 1 160px;
-    min-width: 120px;
+    gap: 4px;
+    flex: 1 1 70px;
+    min-width: 44px;
     cursor: default;
   }
 
   .item-row-field input[type="text"] {
     flex: 1;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border: 1px solid var(--line);
     border-radius: 8px;
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 12px;
     background: var(--paper);
     color: var(--ink);
   }
 
   .item-row-field-btn {
     flex: none;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border: 1px solid var(--accent);
     background: var(--accent);
     color: #fff;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1;
     cursor: pointer;
   }
 
-  .item-row-actions { flex: none; display: flex; gap: 4px; margin-left: auto; }
+  .item-row-actions { flex: none; display: flex; gap: 3px; margin-left: auto; }
 
   .item-row-actions button {
     border: 1px solid var(--line);
     background: var(--paper);
     border-radius: 6px;
-    padding: 6px 9px;
-    font-size: 12px;
+    padding: 5px 7px;
+    font-size: 11px;
     color: var(--muted);
     cursor: pointer;
+    white-space: nowrap;
   }
 
   .item-row-actions button.danger { color: #B24B4B; border-color: #E3B9B9; }
@@ -607,11 +621,11 @@
     flex: none;
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
+    gap: 2px;
+    font-size: 10px;
     color: var(--muted);
     white-space: nowrap;
-    padding: 0 2px;
+    padding: 0 1px;
   }
 
   .preset-buttons {
@@ -671,13 +685,70 @@
     border: 1px solid var(--line);
   }
 
+  /* ── 항목 편집 팝업(바텀시트) ──────────────────
+     항목을 눌러도 목록의 다른 줄이 밀려나지 않도록, 편집 칸은 목록 안에
+     끼워 넣지 않고 화면 하단에서 올라오는 별도 팝업에 띄운다. */
+  .item-detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+  }
+
+  .item-detail-overlay.open { display: block; }
+
+  .item-detail-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(43, 42, 39, 0.45);
+  }
+
+  .item-detail-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 88vh;
+    max-height: 88dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .item-detail-sheet-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .item-detail-sheet-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .item-detail-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+  }
+
   .item-detail {
-    border: 1px solid var(--accent);
-    border-top: 1px dashed var(--line);
-    border-radius: 0 0 10px 10px;
-    padding: 16px;
-    margin: 0 0 10px;
-    background: var(--card);
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
   }
 
   .item-detail-hint { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
@@ -722,6 +793,18 @@
   .settings-save-row { display: flex; gap: 10px; }
   .settings-save-row .add-item-btn,
   .settings-save-row .settings-save-btn { width: auto; flex: 1; }
+
+  /* 저장 버튼 4개를 한 줄에 모두 담기 위한 압축 버전 — 글자 크기와
+     여백만 줄이고, 정말 안 들어가는 초소형 화면에서만 말줄임표로 처리한다. */
+  .settings-save-row-compact { flex-wrap: nowrap; }
+  .settings-save-row-compact button {
+    min-width: 0;
+    padding: 9px 2px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   .settings-save-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
 
