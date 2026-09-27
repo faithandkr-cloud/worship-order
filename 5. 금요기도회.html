@@ -74,16 +74,13 @@
       </div>
 
       <div id="dataSettingsAdvanced" style="display:none;">
-      <div class="settings-hint">대문 화면에서 한 번 연결해두면 여기서는 따로 손댈 일이 거의 없습니다. 폴더 재연결이나 번역본을 직접 확인하고 싶을 때만 열어보세요.</div>
 
       <div class="settings-section">
         <h2>성경 + 찬송가 자료 연결</h2>
-        <div class="settings-hint">컴퓨터나 폰의 자료 폴더(개역개정.mybible 같은 성경 파일과 찬송가 사진들이 함께 들어있는 폴더)를 통째로 선택하면 성경 연결과 찬송가 악보 매칭이 한 번에 됩니다. 성경읽기·찬송가 앱과 같은 방식으로 저장되므로, 그 앱들에서 이미 불러와 둔 성경·악보가 있다면 여기서도 별도 작업 없이 그대로 잡힙니다(같은 주소로 열었을 때). 이 브라우저에만 저장되므로, 폰이나 패드에서 열 때는 그 기기에도 자료 폴더를 내려받아 두고(MEGA 앱 등으로) 그 기기에서 한 번 이 버튼을 눌러 연결해주면 됩니다.</div>
         <div class="settings-save-row" style="margin:0 0 10px;">
           <button type="button" class="add-item-btn" id="dataFolderPickBtn">자료 폴더 선택해서 연결하기</button>
         </div>
         <input type="file" id="dataFolderInput" webkitdirectory="" directory="" multiple="" style="display:none;">
-        <div class="settings-hint" style="margin:0 0 8px;">MEGA 앱처럼 폴더 전체 선택만 되고 안쪽 "자료" 폴더까지 못 들어가진다면, 아래 버튼으로 그 폴더 안에 들어가서 파일들을 직접 여러 개 선택해주세요.</div>
         <div class="settings-save-row" style="margin:0 0 10px;">
           <button type="button" class="preset-btn" id="dataFilesPickBtn">여러 파일 직접 선택</button>
         </div>
@@ -93,7 +90,6 @@
 
       <div class="settings-section">
         <h2>성경 데이터 연결 (수동)</h2>
-        <div class="settings-hint">위에서 자료 폴더를 연결했다면 아래는 그대로 두어도 됩니다. 성경읽기 등 다른 앱에서 이미 저장해 둔 번역본이 있으면 그 이름(ID)만 입력하고 "연결 확인"을 누르세요.</div>
         <div class="settings-field">
           <label for="bibleVerIdInput">번역본 이름(ID)</label>
           <input type="text" id="bibleVerIdInput" placeholder="예: 개역개정">
@@ -113,7 +109,6 @@
 
       <div class="settings-section">
         <h2>찬송가 악보 자동매칭 (수동/보조)</h2>
-        <div class="settings-hint">위에서 자료 폴더를 연결했다면 아래는 그대로 두어도 됩니다. 서버에 실제 이미지 폴더를 올려둔 경우처럼 이 예배순서지 파일과 같은 위치에 폴더를 두고 "번호.jpg" 형식(예: 488.jpg)으로 파일을 넣어두면 그 경로에서도 자동으로 찾습니다. CCM 등 번호가 없는 곡은 제목을 파일명으로 써도 됩니다(예: 깊어진 삶을 주께.jpg).</div>
         <div class="settings-field">
           <label for="hymnFolderInput">악보 폴더 경로</label>
           <input type="text" id="hymnFolderInput" placeholder="예: 찬송가/">
@@ -124,10 +119,8 @@
 
       <div class="settings-section">
         <h2>예배 순서 배정</h2>
-        <div class="settings-hint">항목을 누르면 그 항목의 편집 칸만 펼쳐집니다. 한 번에 하나씩 작업하세요.</div>
         <div id="itemsEditor"></div>
 
-        <div class="settings-hint" style="margin-top:0;">자주 쓰는 순서를 눌러 바로 추가하세요.</div>
         <div class="preset-buttons" id="presetButtons"><button type="button" class="preset-btn">경배와찬양</button><button type="button" class="preset-btn">묵도</button><button type="button" class="preset-btn">찬송</button><button type="button" class="preset-btn">교독문</button><button type="button" class="preset-btn">대표기도</button><button type="button" class="preset-btn">통성기도</button><button type="button" class="preset-btn">성경봉독</button><button type="button" class="preset-btn">설교</button><button type="button" class="preset-btn">특송</button><button type="button" class="preset-btn">헌금</button><button type="button" class="preset-btn">헌금송</button><button type="button" class="preset-btn">광고</button><button type="button" class="preset-btn">주기도문</button><button type="button" class="preset-btn">폐회송</button><button type="button" class="preset-btn">축도</button></div>
 
         <button class="add-item-btn" id="addItemBtn">+ 새 순서 추가</button>
