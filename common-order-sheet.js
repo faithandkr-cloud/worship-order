@@ -1090,7 +1090,7 @@
     const panel = buildItemDetailPanel(item, idx, rowEl);
     itemDetailSheetBody.appendChild(panel);
     itemDetailSheetBody
-      .querySelectorAll(".content-input, .sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
+      .querySelectorAll(".sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
       .forEach(autoGrowTextarea);
     itemDetailOverlay.classList.add("open");
   }
@@ -1527,7 +1527,7 @@
     // 펼쳐진 항목이 있으면, 실제로 화면에 붙은 뒤(레이아웃이 잡힌 뒤)에
     // 이미 들어있는 내용 길이에 맞춰 칸 높이를 맞춰준다(붙기 전에는 높이를
     // 잴 수 없어 0으로 계산되므로, 반드시 appendChild 이후에 해야 한다).
-    itemsEditor.querySelectorAll(".content-input, .sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
+    itemsEditor.querySelectorAll(".sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
       .forEach(autoGrowTextarea);
     // 항목 추가/삭제/순서변경/프리셋 적용처럼 새로 화면을 다시 그리는
     // 경우는 input/change 이벤트가 안 나므로 여기서도 자동 저장을 예약한다.
@@ -1706,22 +1706,20 @@
     const groups = fieldGroupsForType(item);
 
     panel.innerHTML = `
-      <div class="item-detail-hint">이 항목만 수정합니다. 다 끝나면 목록으로 접어두고 다음 항목을 눌러 이어서 편집하세요.</div>
-
-      <div class="field-row">
-        <div class="settings-field field-title">
-          <label class="field-label-strong">제목</label>
-          <input type="text" class="title-input" value="${escapeAttr(item.title)}" placeholder="예: 특별순서">
-        </div>
+      <div class="field-row field-row-title-num">
         <div class="settings-field field-num">
           <label class="field-label-strong">번호</label>
           <input type="text" class="num-input" value="${escapeAttr(item.num)}" placeholder="번호" ${item.sub ? "disabled" : ""}>
         </div>
+        <div class="settings-field field-title">
+          <label class="field-label-strong">제목</label>
+          <input type="text" class="title-input" value="${escapeAttr(item.title)}" placeholder="예: 특별순서">
+        </div>
+        <label class="checkbox-field checkbox-field-sub">
+          <input type="checkbox" class="sub-checkbox" ${item.sub ? "checked" : ""}>
+          하위 항목(번호 없이 · 표시)
+        </label>
       </div>
-      <label class="checkbox-field" style="margin:0 0 14px;">
-        <input type="checkbox" class="sub-checkbox" ${item.sub ? "checked" : ""}>
-        하위 항목(번호 없이 · 표시)
-      </label>
 
       <div class="settings-field" style="margin:28px 0 32px;">
         <label class="field-label-strong">멘트입력칸 (사회자가 실제로 말할 문구)</label>
@@ -1832,7 +1830,6 @@
     const contentInputEl = panel.querySelector(".content-input");
     contentInputEl.addEventListener("input", e => {
       draftItems[idx].content = e.target.value;
-      autoGrowTextarea(contentInputEl);
     });
 
     const sermonContentEl = panel.querySelector(".sermon-content-input");

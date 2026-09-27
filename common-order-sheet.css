@@ -482,19 +482,28 @@
 
   .settings-field textarea { min-height: 90px; line-height: 1.6; }
 
-  /* 멘트입력칸(사회자가 실제로 말할 짧은 문구) — 기본은 한 줄, 내용이
-     길어지면 (auto-grow 스크립트로) 아래로 자연스럽게 늘어난다. */
-  .content-input { min-height: 44px; resize: none; overflow: hidden; }
+  /* 멘트입력칸(사회자가 실제로 말할 짧은 문구) — 한 줄 높이로 고정한다.
+     내용이 한 줄보다 길어지면 칸 안에서 위아래로 스크롤해서 본다. */
+  .content-input { height: 44px; min-height: 44px; max-height: 44px; resize: none; overflow-y: auto; }
 
   /* 사도신경 같은 고정문구, 설교내용처럼 통째로 붙여넣는 칸은 넉넉하게 시작한다. */
   .fixed-text-input { min-height: 320px; }
   .gyodokmun-text-input { min-height: 320px; }
-  .long-content-input { min-height: 320px; }
+  /* 내용입력칸("내용"/"통성기도 내용"/"광고 내용" 등 실제 본문 전체) — 다른
+     칸보다 더 넉넉하게 시작해서 긴 내용도 스크롤 없이 많이 보이게 한다. */
+  .long-content-input { min-height: 480px; }
   .sermon-content-textarea { min-height: 360px; }
 
   .field-row { display: flex; gap: 20px; }
   .field-row .settings-field { flex: 1 1 50%; min-width: 0; }
   .field-row .field-num { flex: 1 1 50%; }
+
+  /* 번호+제목 줄 — 두 칸을 좁혀서 오른쪽에 "하위 항목" 체크칸을 같이 둔다. */
+  .field-row-title-num { align-items: center; gap: 10px; }
+  .field-row-title-num .settings-field { flex: initial; margin: 0; }
+  .field-row-title-num .field-num { flex: 0 0 64px; }
+  .field-row-title-num .field-title { flex: 1 1 auto; min-width: 0; }
+  .field-row-title-num .checkbox-field-sub { flex: none; margin: 20px 0 0; white-space: nowrap; }
 
   .field-label-strong { font-weight: 700; color: var(--ink); }
 
@@ -508,7 +517,7 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 12px 14px;
-    margin: 0 0 8px;
+    margin: 0 0 16px;
     background: var(--card);
     cursor: pointer;
   }
@@ -750,8 +759,6 @@
     background: transparent;
     border: none;
   }
-
-  .item-detail-hint { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
 
   .field-group {
     border-top: 1px dashed var(--line);
