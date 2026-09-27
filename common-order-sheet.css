@@ -484,15 +484,16 @@
 
   /* 멘트입력칸(사회자가 실제로 말할 짧은 문구) — 한 줄 높이로 고정한다.
      내용이 한 줄보다 길어지면 칸 안에서 위아래로 스크롤해서 본다. */
-  .content-input { height: 44px; min-height: 44px; max-height: 44px; resize: none; overflow-y: auto; }
+  .content-input { height: 34px; min-height: 34px; max-height: 34px; padding: 6px 10px; font-size: 14px; line-height: 1.3; resize: none; overflow-y: auto; }
 
   /* 사도신경 같은 고정문구, 설교내용처럼 통째로 붙여넣는 칸은 넉넉하게 시작한다. */
-  .fixed-text-input { min-height: 320px; }
-  .gyodokmun-text-input { min-height: 320px; }
+  .fixed-text-input { min-height: 400px; }
+  .gyodokmun-text-input { min-height: 400px; }
   /* 내용입력칸("내용"/"통성기도 내용"/"광고 내용" 등 실제 본문 전체) — 다른
      칸보다 더 넉넉하게 시작해서 긴 내용도 스크롤 없이 많이 보이게 한다. */
-  .long-content-input { min-height: 480px; }
-  .sermon-content-textarea { min-height: 360px; }
+  .long-content-input { min-height: 560px; }
+  .sermon-content-textarea { min-height: 440px; }
+  .scripture-text-input { min-height: 200px; }
 
   .field-row { display: flex; gap: 20px; }
   .field-row .settings-field { flex: 1 1 50%; min-width: 0; }
@@ -541,7 +542,10 @@
   }
   .item-row-top::-webkit-scrollbar { display: none; }
 
-  .item-row-main { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
+  /* 앞쪽(번호·제목·배지) 구역의 너비를 고정해서, 그 뒤에 오는 공용
+     입력칸이 항목마다 제목 길이가 달라도 항상 같은 위치·같은 너비로
+     시작하게 한다. */
+  .item-row-main { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 0 0 134px; overflow: hidden; }
 
   .item-row-num {
     flex: none;
@@ -563,30 +567,37 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 64px;
+    max-width: 52px;
   }
 
   .item-row-badge {
     flex: none;
+    width: 46px;
+    text-align: center;
     font-size: 10px;
     color: var(--muted);
     background: var(--accent-soft);
-    padding: 2px 7px;
+    padding: 2px 4px;
     border-radius: 20px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
+  /* 공용 입력칸: 너비·위치를 모든 줄에서 항상 동일하게 고정한다(내용 길이에
+     따라 늘었다 줄었다 하지 않도록 flex-grow/shrink를 끈다). 이 입력칸을
+     기준으로 앞쪽(번호·제목·배지)은 고정 너비로, 뒤쪽(조작 버튼)은 오른쪽
+     끝에 고정으로 정렬된다. */
   .item-row-field {
     display: flex;
     align-items: center;
     gap: 4px;
-    flex: 1 1 70px;
-    min-width: 44px;
+    flex: 0 0 128px;
     cursor: default;
   }
 
   .item-row-field input[type="text"] {
-    flex: 1;
+    width: 100%;
     min-width: 0;
     padding: 6px 8px;
     border: 1px solid var(--line);
@@ -623,19 +634,6 @@
   }
 
   .item-row-actions button.danger { color: #B24B4B; border-color: #E3B9B9; }
-
-  .item-row.hidden-row { opacity: 0.5; }
-
-  .item-row-hide-toggle {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 10px;
-    color: var(--muted);
-    white-space: nowrap;
-    padding: 0 1px;
-  }
 
   .preset-buttons {
     display: flex;
@@ -774,6 +772,23 @@
     color: var(--accent);
     margin: 0 0 10px;
   }
+
+  /* 찬송가1 / 찬송가2 구분 제목 — 더 크고 굵게 강조한다. */
+  .hymn-section-title {
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .hymn-optional-note {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  /* 찬송가 번호 입력칸(왼쪽 절반)과 악보 사진 선택 버튼(오른쪽 절반)을
+     한 줄에 나란히 배치한다. */
+  .hymn-input-row { align-items: flex-start; }
+  .hymn-num-field, .hymn-file-field { flex: 1 1 50%; }
 
   .checkbox-field {
     display: flex;

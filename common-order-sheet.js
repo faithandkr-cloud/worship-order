@@ -1555,7 +1555,7 @@
     const isExpanded = expandedItemId === item.id;
 
     const row = document.createElement("div");
-    row.className = "item-row" + (isExpanded ? " expanded" : "") + (item.hidden ? " hidden-row" : "");
+    row.className = "item-row" + (isExpanded ? " expanded" : "");
 
     // 항목의 실제 유형(찬송/성경/일반)에 상관없이 항상 같은 구조로 한 줄에
     // 렌더링한다 — 입력칸의 값은 항상 item.desc(순서 목록 표시용)이면서,
@@ -1575,10 +1575,6 @@
           ${fieldCfg.icon ? `<button type="button" class="item-row-field-btn" title="${fieldCfg.title}">${fieldCfg.icon}</button>` : ""}
         </div>
         <div class="item-row-actions">
-          <label class="item-row-hide-toggle" title="체크하면 예배 순서 목록에서 숨겨집니다">
-            <input type="checkbox" class="hide-checkbox" ${item.hidden ? "checked" : ""}>
-            숨김
-          </label>
           <button type="button" class="item-row-up" title="위로">▲</button>
           <button type="button" class="item-row-down" title="아래로">▼</button>
           <button type="button" class="item-row-delete danger" title="삭제">삭제</button>
@@ -1589,12 +1585,6 @@
     row.querySelector(".item-row-main").addEventListener("click", () => {
       expandedItemId = isExpanded ? null : item.id;
       renderItemsEditor();
-    });
-
-    row.querySelector(".hide-checkbox").addEventListener("click", e => e.stopPropagation());
-    row.querySelector(".hide-checkbox").addEventListener("change", e => {
-      draftItems[idx].hidden = e.target.checked;
-      row.classList.toggle("hidden-row", e.target.checked);
     });
 
     row.querySelector(".item-row-up").addEventListener("click", e => {
@@ -1775,30 +1765,33 @@
       </div>
 
       <div class="field-group hymn-field ${groups.hymn ? "" : "hidden"}">
-        <div class="field-group-title">찬송 관련 데이터</div>
-        <div class="settings-field">
-          <label>찬송가 장 번호 (또는 CCM 제목)</label>
-          <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="예: 488">
+        <div class="field-group-title hymn-section-title">찬송가1</div>
+        <div class="field-row hymn-input-row">
+          <div class="settings-field hymn-num-field">
+            <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
+          </div>
+          <div class="settings-field hymn-file-field">
+            <label>악보 사진 (없으면 자동 검색)</label>
+            <input type="file" accept="image/*" class="hymn-image-input">
+          </div>
         </div>
-        <div class="settings-field">
-          <label>찬송가 악보 사진 (직접 올리기 — 없으면 악보 폴더에서 자동으로 찾습니다)</label>
-          <input type="file" accept="image/*" class="hymn-image-input">
-          ${item.hymnImage ? `<img class="hymn-image-preview" src="${item.hymnImage}" alt="악보 미리보기">` : ""}
-          ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
-          ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>` : ""}
+        ${item.hymnImage ? `<img class="hymn-image-preview" src="${item.hymnImage}" alt="악보 미리보기">` : ""}
+        ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
+        ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>` : ""}
+
+        <div class="field-group-title hymn-section-title" style="margin-top:20px;">찬송가2 <span class="hymn-optional-note">(함께 부를 때만 입력, 선택사항)</span></div>
+        <div class="field-row hymn-input-row">
+          <div class="settings-field hymn-num-field">
+            <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
+          </div>
+          <div class="settings-field hymn-file-field">
+            <label>악보 사진 (없으면 자동 검색)</label>
+            <input type="file" accept="image/*" class="hymn-image-input-2">
+          </div>
         </div>
-        <div class="field-group-title" style="margin-top:16px;">찬송 2곡째 (함께 부를 때만 입력, 선택사항)</div>
-        <div class="settings-field">
-          <label>찬송가 장 번호 2 (또는 CCM 제목)</label>
-          <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="예: 289">
-        </div>
-        <div class="settings-field">
-          <label>찬송가 악보 사진 2 (직접 올리기 — 없으면 악보 폴더에서 자동으로 찾습니다)</label>
-          <input type="file" accept="image/*" class="hymn-image-input-2">
-          ${item.hymnImage2 ? `<img class="hymn-image-preview" src="${item.hymnImage2}" alt="악보2 미리보기">` : ""}
-          ${item.hymnImage2 ? `<button type="button" class="hymn-image-remove-btn-2 settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
-          ${!item.hymnImage2 ? `<button type="button" class="hymn-auto-preview-btn-2 preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result-2"></div>` : ""}
-        </div>
+        ${item.hymnImage2 ? `<img class="hymn-image-preview" src="${item.hymnImage2}" alt="악보2 미리보기">` : ""}
+        ${item.hymnImage2 ? `<button type="button" class="hymn-image-remove-btn-2 settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
+        ${!item.hymnImage2 ? `<button type="button" class="hymn-auto-preview-btn-2 preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result-2"></div>` : ""}
       </div>
     `;
 
