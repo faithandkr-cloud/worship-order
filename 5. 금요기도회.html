@@ -64,21 +64,17 @@
 
       <div class="settings-section">
         <h2>예배 정보</h2>
-        <div class="settings-field">
-          <label for="serviceTitleInput">예배 이름</label>
-          <input type="text" id="serviceTitleInput" placeholder="예: 주일오전예배, 청년예배, 故 OOO 집사님 추도예배 등">
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h2>성경·찬송 자료</h2>
-        <div class="settings-hint">대문 화면에서 한 번 연결해두면 여기서는 따로 손댈 일이 거의 없습니다. 폴더 재연결이나 번역본을 직접 확인하고 싶을 때만 열어보세요.</div>
-        <div class="settings-save-row" style="margin:0;">
-          <button type="button" class="preset-btn" id="dataSettingsToggleBtn">자료 연결 설정 열어보기 ▾</button>
+        <div class="field-row">
+          <div class="settings-field">
+            <label for="serviceTitleInput">예배 이름</label>
+            <input type="text" id="serviceTitleInput" placeholder="예: 주일오전예배, 청년예배, 故 OOO 집사님 추도예배 등">
+          </div>
+          <button type="button" class="advanced-toggle-btn" id="dataSettingsToggleBtn">자료연결 ▾</button>
         </div>
       </div>
 
       <div id="dataSettingsAdvanced" style="display:none;">
+      <div class="settings-hint">대문 화면에서 한 번 연결해두면 여기서는 따로 손댈 일이 거의 없습니다. 폴더 재연결이나 번역본을 직접 확인하고 싶을 때만 열어보세요.</div>
 
       <div class="settings-section">
         <h2>성경 + 찬송가 자료 연결</h2>

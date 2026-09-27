@@ -1037,7 +1037,7 @@
   dataSettingsToggleBtn.addEventListener("click", () => {
     const open = dataSettingsAdvanced.style.display !== "none";
     dataSettingsAdvanced.style.display = open ? "none" : "block";
-    dataSettingsToggleBtn.textContent = open ? "자료 연결 설정 열어보기 ▾" : "자료 연결 설정 닫기 ▴";
+    dataSettingsToggleBtn.textContent = open ? "자료연결 ▾" : "닫기 ▴";
   });
 
   const VALID_ITEM_TYPES = ["일반", "성경말씀", "성경본문", "찬송", "설교"];
@@ -1188,8 +1188,13 @@
     { label: "축도", type: "일반", desc: "" },
   ];
 
-  // 편집 중에는 items를 직접 건드리지 않고 별도의 작업본(draft)에서 수정한 뒤
-  // "저장" 버튼을 눌러야만 실제 목록에 반영한다.
+  // 편집 중에는 items를 직접 건드리지 않고 별도의 작업본(draft)에서 수정한다.
+  // (예전에는 "브라우저 저장" 버튼을 눌러야만 실제 목록에 반영되고, ✕로
+  //  닫으면 그냥 사라졌다 — 예배 중 급히 고치고 반사적으로 ✕를 눌렀다가
+  //  방금 고친 내용이 통째로 날아가는 사고가 있었음. 그래서 지금은 아래
+  //  scheduleAutosave/commitDraftAndSave로 입력하는 즉시 자동 반영·저장한다.
+  //  "브라우저 저장"·"로컬 저장(파일로)" 버튼은 안전장치로 계속 남겨두되,
+  //  이제는 누르지 않아도 이미 저장되어 있다.)
   let draftItems = [];
 
   // 지금 펼쳐져 있는 항목의 id — 한 번에 하나만 펼쳐진다(네이버 블로그
@@ -1197,6 +1202,29 @@
   let expandedItemId = null;
 
   function cloneItems(src) { return src.map(it => Object.assign({}, it)); }
+
+  // draftItems(+예배 이름·악보 폴더 입력값)를 실제 데이터(items 등)에 즉시
+  // 반영하고 저장한다. 입력할 때마다, 그리고 설정 화면을 닫을 때 호출된다.
+  function commitDraftAndSave() {
+    if (serviceTitleInput) serviceTitle = serviceTitleInput.value.trim() || defaultServiceTitle;
+    if (hymnFolderInput) hymnFolder = hymnFolderInput.value.trim() || defaultHymnFolder;
+    items = cloneItems(draftItems);
+    saveState();
+    renderList();
+  }
+
+  // 타이핑 중 매 글자마다 저장하면 느려질 수 있어, 입력이 잠시 멈췄을 때
+  // (0.5초) 한 번만 저장한다. 단, 화면을 닫거나 앱이 백그라운드로 갈 때는
+  // commitDraftAndSave()를 바로(디바운스 없이) 불러 확실히 저장해둔다.
+  let autosaveTimer = null;
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(commitDraftAndSave, 500);
+  }
+  function flushAutosaveNow() {
+    clearTimeout(autosaveTimer);
+    if (settingsOverlay.classList.contains("open")) commitDraftAndSave();
+  }
 
   function openSettings() {
     draftItems = cloneItems(items);
@@ -1211,11 +1239,28 @@
   }
 
   function closeSettings() {
+    flushAutosaveNow(); // ✕로 닫아도 방금 고친 내용이 사라지지 않도록 먼저 저장
     settingsOverlay.classList.remove("open");
   }
 
   settingsOpenBtn.addEventListener("click", openSettings);
   settingsCloseBtn.addEventListener("click", closeSettings);
+
+  // 타이핑 도중 화면이 꺼지거나(패드 절전) 앱이 백그라운드로 넘어가거나
+  // 탭/창이 닫히는 경우까지 대비한 안전장치 — 이런 경우 브라우저가
+  // ✕ 버튼 클릭 없이 그냥 페이지를 멈추거나 닫아버릴 수 있어서, 그 순간까지
+  // 입력된 내용을 한 번 더 즉시 저장해둔다.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushAutosaveNow();
+  });
+  window.addEventListener("pagehide", flushAutosaveNow);
+
+  // 입력칸/체크박스 등 개별 입력 이벤트마다 자동 저장을 예약한다(이벤트
+  // 위임 — itemsEditor 안에서 새로 생기는 입력칸에도 별도 등록 없이 적용됨).
+  itemsEditor.addEventListener("input", scheduleAutosave);
+  itemsEditor.addEventListener("change", scheduleAutosave);
+  serviceTitleInput.addEventListener("input", scheduleAutosave);
+  hymnFolderInput.addEventListener("input", scheduleAutosave);
 
   function addPresetItem(preset) {
     const item = {
@@ -1405,6 +1450,9 @@
     // 잴 수 없어 0으로 계산되므로, 반드시 appendChild 이후에 해야 한다).
     itemsEditor.querySelectorAll(".content-input, .sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
       .forEach(autoGrowTextarea);
+    // 항목 추가/삭제/순서변경/프리셋 적용처럼 새로 화면을 다시 그리는
+    // 경우는 input/change 이벤트가 안 나므로 여기서도 자동 저장을 예약한다.
+    scheduleAutosave();
   }
 
   // 한 항목 = [한 줄 요약 행(+빠른입력)] + (펼쳐진 경우에만) [편집 칸]
