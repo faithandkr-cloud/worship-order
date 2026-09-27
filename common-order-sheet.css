@@ -483,17 +483,18 @@
   .settings-field textarea { min-height: 90px; line-height: 1.6; }
 
   /* 멘트입력칸(사회자가 실제로 말할 짧은 문구) — 한 줄 높이로 고정한다.
-     내용이 한 줄보다 길어지면 칸 안에서 위아래로 스크롤해서 본다. */
-  .content-input { height: 30px; min-height: 30px; max-height: 30px; padding: 4px 8px; font-size: 13px; line-height: 1.2; resize: none; overflow-y: auto; }
+     내용이 한 줄보다 길어지면 칸 안에서 위아래로 스크롤해서 본다.
+     (.settings-field textarea 보다 우선 적용되도록 선택자 명시도를 높임) */
+  .settings-field textarea.content-input { height: 30px; min-height: 30px; max-height: 30px; padding: 4px 8px; font-size: 13px; line-height: 1.2; resize: none; overflow-y: auto; }
 
   /* 사도신경 같은 고정문구, 설교내용처럼 통째로 붙여넣는 칸은 넉넉하게 시작한다. */
-  .fixed-text-input { min-height: 520px; }
-  .gyodokmun-text-input { min-height: 520px; }
+  .settings-field textarea.fixed-text-input { min-height: 520px; }
+  .settings-field textarea.gyodokmun-text-input { min-height: 520px; }
   /* 내용입력칸("내용"/"통성기도 내용"/"광고 내용" 등 실제 본문 전체) — 다른
      칸보다 더 넉넉하게 시작해서 긴 내용도 스크롤 없이 많이 보이게 한다. */
-  .long-content-input { min-height: 720px; }
-  .sermon-content-textarea { min-height: 560px; }
-  .scripture-text-input { min-height: 280px; }
+  .settings-field textarea.long-content-input { min-height: 720px; }
+  .settings-field textarea.sermon-content-textarea { min-height: 560px; }
+  .settings-field textarea.scripture-text-input { min-height: 280px; }
 
   .field-row { display: flex; gap: 20px; }
   .field-row .settings-field { flex: 1 1 50%; min-width: 0; }
@@ -776,7 +777,7 @@
 
   /* 찬송가1 / 찬송가2 구분 제목 — 더 크고 굵게 강조한다. */
   .hymn-section-title {
-    font-size: 17px;
+    font-size: 13px;
     font-weight: 800;
   }
 

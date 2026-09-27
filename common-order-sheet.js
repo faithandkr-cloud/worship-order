@@ -1726,7 +1726,6 @@
       <div class="field-group gyodokmun-field ${groups.gyodokmun ? "" : "hidden"}">
         <div class="field-group-title">교독문 내용</div>
         <div class="settings-field">
-          <label>번호로 자동 검색해서 채우거나, 직접 입력·수정할 수 있습니다</label>
           <textarea class="gyodokmun-text-input" placeholder="예: 인도 / 하나님이여 주의 판단력을 왕에게 주시고 주의 공의를 왕의 아들에게 주소서&#10;회중 / 그가 주의 백성을 공의로 재판하며 주의 가난한 자로 정의를 재판하리니">${escapeText(item.gyodokmunText)}</textarea>
         </div>
       </div>
@@ -1771,8 +1770,7 @@
             <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
           </div>
           <div class="settings-field hymn-file-field">
-            <label>악보 사진 (없으면 자동 검색)</label>
-            <input type="file" accept="image/*" class="hymn-image-input">
+              <input type="file" accept="image/*" class="hymn-image-input">
           </div>
         </div>
         ${item.hymnImage ? `<img class="hymn-image-preview" src="${item.hymnImage}" alt="악보 미리보기">` : ""}
@@ -1785,8 +1783,7 @@
             <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
           </div>
           <div class="settings-field hymn-file-field">
-            <label>악보 사진 (없으면 자동 검색)</label>
-            <input type="file" accept="image/*" class="hymn-image-input-2">
+              <input type="file" accept="image/*" class="hymn-image-input-2">
           </div>
         </div>
         ${item.hymnImage2 ? `<img class="hymn-image-preview" src="${item.hymnImage2}" alt="악보2 미리보기">` : ""}
