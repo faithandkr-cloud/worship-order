@@ -788,8 +788,15 @@
 
   /* 찬송가 번호 입력칸(왼쪽 절반)과 악보 사진 선택 버튼(오른쪽 절반)을
      한 줄에 나란히 배치한다. */
-  .hymn-input-row { align-items: flex-start; }
-  .hymn-num-field, .hymn-file-field { flex: 1 1 50%; }
+  /* 찬송가 번호 입력칸(왼쪽, 살짝 좁게)과 자동매칭 미리보기 버튼(오른쪽,
+     번호 입력칸이 있던 자리를 대신 차지) — 파일 선택 버튼은 그 아래 줄로
+     내려서 번호 입력칸 밑에 단독으로 놓는다.
+     (.field-row .settings-field 보다 우선 적용되도록 선택자 명시도를 높임) */
+  .hymn-input-row { align-items: stretch; }
+  .field-row .settings-field.hymn-num-field { flex: 0 0 34%; }
+  .field-row .settings-field.hymn-auto-field { flex: 1 1 auto; min-width: 0; }
+  .hymn-auto-field .preset-btn { width: 100%; height: 100%; }
+  .hymn-file-standalone { margin-top: -6px; }
 
   .checkbox-field {
     display: flex;

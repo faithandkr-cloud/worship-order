@@ -1769,26 +1769,32 @@
           <div class="settings-field hymn-num-field">
             <input type="text" class="hymn-num-input" value="${escapeAttr(item.hymnNum)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
           </div>
-          <div class="settings-field hymn-file-field">
-              <input type="file" accept="image/*" class="hymn-image-input">
+          <div class="settings-field hymn-auto-field">
+            ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn">🔍 악보 폴더에서 자동매칭 미리보기</button>` : ""}
           </div>
+        </div>
+        <div class="settings-field hymn-file-standalone">
+          <input type="file" accept="image/*" class="hymn-image-input">
         </div>
         ${item.hymnImage ? `<img class="hymn-image-preview" src="${item.hymnImage}" alt="악보 미리보기">` : ""}
         ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
-        ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>` : ""}
+        ${!item.hymnImage ? `<div class="hymn-auto-preview-result"></div>` : ""}
 
         <div class="field-group-title hymn-section-title" style="margin-top:40px;">찬송가2 <span class="hymn-optional-note">(함께 부를 때만 입력, 선택사항)</span></div>
         <div class="field-row hymn-input-row">
           <div class="settings-field hymn-num-field">
             <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">
           </div>
-          <div class="settings-field hymn-file-field">
-              <input type="file" accept="image/*" class="hymn-image-input-2">
+          <div class="settings-field hymn-auto-field">
+            ${!item.hymnImage2 ? `<button type="button" class="hymn-auto-preview-btn-2 preset-btn">🔍 악보 폴더에서 자동매칭 미리보기</button>` : ""}
           </div>
+        </div>
+        <div class="settings-field hymn-file-standalone">
+          <input type="file" accept="image/*" class="hymn-image-input-2">
         </div>
         ${item.hymnImage2 ? `<img class="hymn-image-preview" src="${item.hymnImage2}" alt="악보2 미리보기">` : ""}
         ${item.hymnImage2 ? `<button type="button" class="hymn-image-remove-btn-2 settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
-        ${!item.hymnImage2 ? `<button type="button" class="hymn-auto-preview-btn-2 preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result-2"></div>` : ""}
+        ${!item.hymnImage2 ? `<div class="hymn-auto-preview-result-2"></div>` : ""}
       </div>
     `;
 
