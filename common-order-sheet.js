@@ -1777,7 +1777,7 @@
         ${item.hymnImage ? `<button type="button" class="hymn-image-remove-btn settings-reset-btn" style="padding:8px 0;">사진 삭제</button>` : ""}
         ${!item.hymnImage ? `<button type="button" class="hymn-auto-preview-btn preset-btn" style="margin-top:8px;">🔍 악보 폴더에서 자동매칭 미리보기</button><div class="hymn-auto-preview-result"></div>` : ""}
 
-        <div class="field-group-title hymn-section-title" style="margin-top:20px;">찬송가2 <span class="hymn-optional-note">(함께 부를 때만 입력, 선택사항)</span></div>
+        <div class="field-group-title hymn-section-title" style="margin-top:40px;">찬송가2 <span class="hymn-optional-note">(함께 부를 때만 입력, 선택사항)</span></div>
         <div class="field-row hymn-input-row">
           <div class="settings-field hymn-num-field">
             <input type="text" class="hymn-num-input-2" value="${escapeAttr(item.hymnNum2)}" placeholder="찬송가 장 번호 (또는 CCM 제목)">

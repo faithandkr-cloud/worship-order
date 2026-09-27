@@ -597,7 +597,7 @@
   }
 
   .item-row-field input[type="text"] {
-    width: 210px;
+    width: 160px;
     flex: none;
     min-width: 0;
     padding: 6px 8px;
