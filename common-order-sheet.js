@@ -1,4 +1,17 @@
 // ══════════════════════════════════════════════
+  // 브라우저 저장소를 "영구 보관"으로 요청 — 성경/찬송가 데이터가 들어있는
+  // IndexedDB는 기본적으로 "최선을 다해(best-effort)" 보관되는 저장소라,
+  // 기기 저장공간이 부족해지면 브라우저가 사용자에게 알리지 않고 조용히
+  // 지워버릴 수 있다(특히 자주 안 여는 사이트, 안드로이드에서 더 잘 발생).
+  // navigator.storage.persist()를 불러서 "영구 보관"으로 승격을 요청해두면
+  // 이런 자동 삭제 대상에서 빠질 확률이 크게 올라간다(크롬은 별도 팝업 없이
+  // 조건이 맞으면 자동으로 허용한다 — 이 사이트를 자주/최근에 열었을수록,
+  // 홈 화면에 추가해뒀을수록 허용될 가능성이 높아진다).
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+  }
+
+  // ══════════════════════════════════════════════
   // 성경 데이터 저장소 — 성경읽기_mobile.html과 완전히 같은 방식
   // (IndexedDB 'BibleAppStore'의 'files' 스토어, 키는 'bible:번역본이름',
   // 값은 마이스워드(.mybible) SQLite 파일의 원본 바이너리).
@@ -890,6 +903,7 @@
     detailHeaderTitle.textContent = item.title;
     overlay.classList.toggle("scroll-mode", !isPagedType(item));
     overlay.classList.add("open");
+    ensureOverlayHistoryEntry();
     // overlay가 display:flex로 바뀐 다음 프레임에 실제 크기를 재야 정확하다.
     requestAnimationFrame(recomputePages);
   }
@@ -947,6 +961,7 @@
   function closeDetail() {
     overlay.classList.remove("open");
     currentItem = null;
+    maybeReleaseOverlayHistory();
   }
 
   document.getElementById("detailClose").addEventListener("click", closeDetail);
@@ -980,7 +995,7 @@
     if (!overlay.classList.contains("open")) return;
     if (e.key === "ArrowRight") goNext();
     if (e.key === "ArrowLeft") goPrev();
-    if (e.key === "Escape") { overlay.classList.remove("open"); currentItem = null; }
+    if (e.key === "Escape") { closeDetail(); }
   });
 
   // 글자 크기 변경 — 열려 있는 항목이 있으면 페이지를 다시 계산한다
@@ -1080,6 +1095,7 @@
     itemDetailOverlay.classList.remove("open");
     itemDetailSheetBody.innerHTML = "";
     itemsEditor.querySelectorAll(".item-row.expanded").forEach(r => r.classList.remove("expanded"));
+    maybeReleaseOverlayHistory();
   }
 
   function openItemDetailModal(item, idx, rowEl) {
@@ -1093,6 +1109,7 @@
       .querySelectorAll(".sermon-content-input, .fixed-text-input, .gyodokmun-text-input, .long-content-input")
       .forEach(autoGrowTextarea);
     itemDetailOverlay.classList.add("open");
+    ensureOverlayHistoryEntry();
   }
 
   itemDetailBackdrop.addEventListener("click", closeItemDetailModal);
@@ -1173,9 +1190,21 @@
     try {
       const n = await HymnImageDB.count();
       const verId = getActiveBibleVerId();
+      let persistedNote = "";
+      if (navigator.storage && navigator.storage.persisted) {
+        try {
+          const persisted = await navigator.storage.persisted();
+          persistedNote = persisted ? "" : " (이 기기에서 아직 '영구 보관' 승인 전 — 자주 열어보시면 자동으로 전환됩니다)";
+        } catch (e) {}
+      }
       if (n > 0 || verId) {
         dataFolderStatusText.textContent =
-          `연결됨 — 악보 이미지 ${n}개 저장됨` + (verId ? `, 성경 "${verId}" 연결됨.` : ".");
+          `연결됨 — 악보 이미지 ${n}개 저장됨` + (verId ? `, 성경 "${verId}" 연결됨.` : ".") + persistedNote;
+      } else {
+        // 예전에는 여기서 아무 것도 안 해서, 실제로는 연결이 끊어졌는데도
+        // 화면에 남아있던(기본 예시) 문구가 "연결된 것처럼" 계속 보이는
+        // 문제가 있었다. 실제 상태를 그대로 보여주도록 고친다.
+        dataFolderStatusText.textContent = "아직 연결된 자료가 없습니다. 위 버튼으로 폴더를 선택해주세요." + persistedNote;
       }
     } catch (e) {}
   }
@@ -1310,6 +1339,7 @@
     serviceTitleInput.value = serviceTitle;
     renderItemsEditor();
     settingsOverlay.classList.add("open");
+    ensureOverlayHistoryEntry();
     bibleVerIdInput.value = getActiveBibleVerId();
     if (getActiveBibleVerId()) refreshBibleStatus();
     hymnFolderInput.value = hymnFolder;
@@ -1320,6 +1350,7 @@
     flushAutosaveNow(); // ✕로 닫아도 방금 고친 내용이 사라지지 않도록 먼저 저장
     closeItemDetailModal(); // 항목 편집 팝업이 열려 있었다면 같이 닫는다
     settingsOverlay.classList.remove("open");
+    maybeReleaseOverlayHistory();
   }
 
   settingsOpenBtn.addEventListener("click", openSettings);
@@ -2143,3 +2174,48 @@
     serviceTitleInput.value = defaultServiceTitle;
     renderItemsEditor();
   });
+
+  // ── 뒤로가기(안드로이드 물리 back 버튼) 대응 ─────────────────────
+  //
+  // 원래는 설정/항목편집/순서보기 팝업이 열려 있어도 히스토리에 아무
+  // 흔적을 남기지 않아서, 뒤로가기를 누르면 "팝업만 닫히는" 게 아니라
+  // 브라우저가 원래 있던 이전 페이지(대문 등)로 바로 나가버렸다.
+  // 팝업을 하나라도 열 때 히스토리에 가짜 항목을 하나 쌓아두고, 뒤로가기로
+  // 그 항목이 지워질 때(popstate) 열려 있는 팝업들을 대신 닫아주는 방식으로
+  // 고친다. 여러 팝업이 겹쳐 있어도(설정 + 항목편집) 실제로 쌓는 히스토리
+  // 항목은 하나뿐이라, 뒤로가기 한 번이면 전부 닫히고 예배 순서 화면으로
+  // 돌아간다.
+  let overlayHistoryPushed = false;
+
+  function isAnyOverlayOpen() {
+    return overlay.classList.contains("open")
+      || settingsOverlay.classList.contains("open")
+      || itemDetailOverlay.classList.contains("open");
+  }
+
+  function ensureOverlayHistoryEntry() {
+    if (overlayHistoryPushed) return;
+    overlayHistoryPushed = true;
+    history.pushState({ orderSheetOverlayOpen: true }, "", location.href);
+  }
+
+  // 팝업을 닫는 동작(✕ 버튼, 배경 클릭, Esc 등) 끝에서 호출한다.
+  // 아직 다른 팝업이 열려 있으면 아무 것도 하지 않고, 전부 닫힌 뒤에만
+  // 방금 쌓아둔 히스토리 항목을 정리한다(popstate가 아닌 경우에만 —
+  // 뒤로가기로 이미 지워진 항목을 또 지우면 안 되므로 플래그로 구분한다).
+  function maybeReleaseOverlayHistory() {
+    if (!overlayHistoryPushed) return;
+    if (isAnyOverlayOpen()) return;
+    overlayHistoryPushed = false;
+    history.back();
+  }
+
+  window.addEventListener("popstate", () => {
+    if (!overlayHistoryPushed) return; // 우리가 쌓은 항목이 아니면 관여하지 않는다
+    overlayHistoryPushed = false;
+    // 실제로 열려 있는 팝업을 전부(중첩되어 있어도) 그 자리에서 닫는다.
+    if (itemDetailOverlay.classList.contains("open")) closeItemDetailModal();
+    if (settingsOverlay.classList.contains("open")) closeSettings();
+    if (overlay.classList.contains("open")) closeDetail();
+  });
+
