@@ -292,15 +292,17 @@
   //   "유형" 선택칸이 나타나지 않는다(자주 쓰는 순서 버튼으로만 만들어진다).
   // ══════════════════════════════════════════════
 
-  // 로컬 저장 키에 이 파일의 경로(location.pathname)를 포함시킨다.
-  // (예전에는 모든 예배순서지 파일이 이 값을 똑같이 썼는데, 같은 도메인
-  // 에서 열면 localStorage가 도메인 단위로 공유되기 때문에 한 파일에서
-  // "저장하기"를 누르면 다른 예배순서지까지 그 내용으로 덮어
-  // 써지는 문제가 있었다. 파일마다 다른 키를 쓰도록 고쳐서 서로 완전히
-  // 분리되게 했다.)
-  const STORAGE_KEY = "cdyb_order_service_data_v1:" + (location.pathname || "unknown");
+  // 예배 데이터는 orders-data.js(window.ORDER_DATA)에 모여 있고, 이 화면은
+  // 주소의 ?s=예배번호 로 그중 하나를 골라 쓴다. 브라우저 저장본은 예배별
+  // 키로 따로 보관하되, 저장 당시의 데이터 버전(base)이 지금 orders-data.js
+  // 의 버전과 같을 때만 쓴다(새 파일을 올려 버전이 바뀌면 옛 저장본은 무시).
+  const ORDER_DB = window.ORDER_DATA || { version: "", services: {} };
+  const SERVICE_ID = new URLSearchParams(location.search).get("s") || "";
+  const SERVICE_DATA = (ORDER_DB.services || {})[SERVICE_ID] || null;
+  const STORAGE_PREFIX = "cdyb_order_draft_v2:";
+  const STORAGE_KEY = STORAGE_PREFIX + SERVICE_ID;
 
-  const defaultServiceTitle = "주일오전예배";
+  const defaultServiceTitle = (SERVICE_DATA && SERVICE_DATA.serviceTitle) || "주일오전예배";
 
   // 문단마다 별도 블록으로 나눠야 페이지 계산이 정확해진다 — 빈 줄 기준으로 분리.
   function paragraphs(text, className) {
@@ -650,47 +652,35 @@
     return it;
   }
 
-  function loadEmbeddedData() {
+  function readDraft(id) {
     try {
-      const el = document.getElementById("embeddedData");
-      if (!el) return null;
-      const text = (el.textContent || "").trim();
-      if (!text || text === "{}") return null;
-      const parsed = JSON.parse(text);
-      if (parsed && Array.isArray(parsed.items) && parsed.items.length) return parsed;
-    } catch (e) {
-      // 파일 안의 데이터가 손상되었으면 무시하고 다음 단계로 넘어간다.
-    }
+      const raw = localStorage.getItem(STORAGE_PREFIX + id);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (d && d.base === ORDER_DB.version && d.data && Array.isArray(d.data.items) && d.data.items.length) return d.data;
+    } catch (e) {}
     return null;
   }
 
+  function loadEmbeddedData() {
+    const s = SERVICE_DATA;
+    return (s && Array.isArray(s.items) && s.items.length) ? s : null;
+  }
+
+  // 우선순위: ① 이 브라우저에 "저장"해 둔 최신 편집본 → ② orders-data.js의 내용 → ③ 기본 순서
   function loadState() {
-    const embedded = loadEmbeddedData();
-    if (embedded) {
-      serviceTitle = embedded.serviceTitle || defaultServiceTitle;
-      hymnFolder = embedded.hymnFolder || defaultHymnFolder;
-      items = embedded.items.map(migrateItem);
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      if (saved && Array.isArray(saved.items) && saved.items.length) {
-        serviceTitle = saved.serviceTitle || defaultServiceTitle;
-        hymnFolder = saved.hymnFolder || defaultHymnFolder;
-        items = saved.items.map(migrateItem);
-      }
-    } catch (e) {
-      // 저장된 값을 읽지 못하면 기본값을 그대로 사용한다.
-    }
+    const src = readDraft(SERVICE_ID) || loadEmbeddedData();
+    if (!src) return;
+    serviceTitle = src.serviceTitle || defaultServiceTitle;
+    hymnFolder = src.hymnFolder || defaultHymnFolder;
+    items = src.items.map(migrateItem);
   }
 
   function saveState() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ serviceTitle, hymnFolder, items }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ base: ORDER_DB.version, data: { serviceTitle, hymnFolder, items } }));
     } catch (e) {
-      // 저장이 불가능한 환경(예: 일부 브라우저의 file:// 제한)이면 조용히 건너뛴다.
+      // 저장이 불가능한 환경이면 조용히 건너뛴다.
     }
   }
 
@@ -2083,18 +2073,22 @@
   // 지금 화면에 있는 데이터를 새 HTML 파일 하나로 그대로 담아 다운로드한다.
   // 이 파일은 로컬 저장(localStorage)과 무관하게 그 안에 데이터를 가지고
   // 있으므로, 다른 컴퓨터로 옮겨서 열어도 내용이 그대로 보인다.
+  // 모든 예배의 내용을 orders-data.js 파일 하나로 내려받는다. 지금 예배는 화면의
+  // 내용으로, 다른 예배는 orders-data.js의 내용(이 브라우저에 아직 파일로 내보내지
+  // 않은 저장본이 있으면 그것)으로 채워서, 다른 예배를 고친 내용이 빠지지 않게 한다.
   function downloadExportedHtml() {
-    const docClone = document.documentElement.cloneNode(true);
-    docClone.querySelectorAll(".detail-overlay, .settings-overlay").forEach(el => el.classList.remove("open"));
-    const dataScript = docClone.querySelector("#embeddedData");
-    if (dataScript) dataScript.textContent = JSON.stringify({ serviceTitle, hymnFolder, items });
-
-    const html = "<!DOCTYPE html>\n" + docClone.outerHTML;
-    const blob = new Blob([html], { type: "text/html" });
+    const services = {};
+    Object.keys(ORDER_DB.services || {}).forEach(id => {
+      services[id] = readDraft(id) || ORDER_DB.services[id];
+    });
+    services[SERVICE_ID] = { serviceTitle, hymnFolder, items };
+    const out = { version: new Date().toISOString(), services };
+    const text = "window.ORDER_DATA = " + JSON.stringify(out, null, 1) + ";\n";
+    const blob = new Blob([text], { type: "text/javascript" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = currentFileName();
+    a.download = "orders-data.js";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
