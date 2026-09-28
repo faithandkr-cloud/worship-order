@@ -314,7 +314,19 @@
         req.onerror = e => rej(e);
       });
     }
-    return { save, load };
+
+    async function listKeys(prefix) {
+      const db = await open();
+      return new Promise((res) => {
+        try {
+          const tx = db.transaction('files', 'readonly');
+          const req = tx.objectStore('files').getAllKeys();
+          req.onsuccess = () => res((req.result || []).filter(k => String(k).startsWith(prefix || '')));
+          req.onerror = () => res([]);
+        } catch (e) { res([]); }
+      });
+    }
+    return { save, load, listKeys };
   })();
 
   function stripMyswordExt(filename) {
@@ -346,10 +358,31 @@
   let activeBibleVerId = "";
   try { activeBibleVerId = localStorage.getItem("cdyb_bible_verid") || ""; } catch (e) {}
 
+
+  // [보완] 영구 보관 요청 — 대문 화면에서도 요청한다(결과는 자료연결 상태에 표시).
+  let PERSIST_NOTE = "";
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().then(async () => {
+      try {
+        const p = await navigator.storage.persisted();
+        PERSIST_NOTE = p ? " · 영구 보관: 승인됨" : " · 영구 보관: 미승인(기기 저장공간 부족 시 삭제될 수 있음)";
+      } catch (e) {}
+    }).catch(() => {});
+  }
+
   function setActiveBibleVerId(verId) {
     activeBibleVerId = verId;
     try { localStorage.setItem("cdyb_bible_verid", verId); } catch (e) {}
   }
+
+  (async () => {
+    try {
+      if (!activeBibleVerId) {
+        const keys = await AppDB.listKeys('bible:');
+        if (keys.length) setActiveBibleVerId(String(keys[0]).slice('bible:'.length));
+      }
+    } catch (e) {}
+  })();
 
   const HymnImageDB = (() => {
     const DB_NAME = 'hymnDB';
@@ -456,8 +489,8 @@
       const n = await HymnImageDB.count();
       dataFolderStatusText.textContent =
         (n > 0 || activeBibleVerId)
-          ? `연결됨 — 악보 이미지 ${n}개 저장됨` + (activeBibleVerId ? `, 성경 "${activeBibleVerId}" 연결됨.` : ".")
-          : "아직 연결하지 않았습니다.";
+          ? `연결됨 — 악보 이미지 ${n}개 저장됨` + (activeBibleVerId ? `, 성경 "${activeBibleVerId}" 연결됨.` : ".") + PERSIST_NOTE
+          : "아직 연결하지 않았습니다." + PERSIST_NOTE;
     } catch (e) {}
   }
 

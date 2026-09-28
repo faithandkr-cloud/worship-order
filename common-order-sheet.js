@@ -51,7 +51,19 @@
         req.onerror = e => rej(e);
       });
     }
-    return { save, load };
+
+    async function listKeys(prefix) {
+      const db = await open();
+      return new Promise((res) => {
+        try {
+          const tx = db.transaction('files', 'readonly');
+          const req = tx.objectStore('files').getAllKeys();
+          req.onsuccess = () => res((req.result || []).filter(k => String(k).startsWith(prefix || '')));
+          req.onerror = () => res([]);
+        } catch (e) { res([]); }
+      });
+    }
+    return { save, load, listKeys };
   })();
 
   // 66권 book number -> 한글 이름 (성경읽기_mobile.html과 동일)
@@ -124,6 +136,18 @@
   function setActiveBibleVerId(verId) {
     try { localStorage.setItem("cdyb_bible_verid", verId); } catch (e) {}
   }
+
+
+  // [보완] localStorage의 "사용 중인 성경 이름"이 사라졌는데 IndexedDB에 성경
+  // 파일은 남아 있는 경우, 자동으로 다시 찾아서 연결 상태를 복구한다.
+  async function recoverBibleVerId() {
+    try {
+      if (getActiveBibleVerId()) return;
+      const keys = await AppDB.listKeys('bible:');
+      if (keys.length) setActiveBibleVerId(String(keys[0]).slice('bible:'.length));
+    } catch (e) {}
+  }
+  recoverBibleVerId();
 
   function parseScriptureRef(ref) {
     if (!ref) return null;
